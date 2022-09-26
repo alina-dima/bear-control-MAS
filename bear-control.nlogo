@@ -2,7 +2,7 @@ extensions [ time ]
 
 breed [ bears bear ]
 
-turtles-own [ energy age]
+turtles-own [ energy age sex ]
 
 globals [
   date
@@ -20,6 +20,7 @@ to setup
     set shape "bear"
     set energy random 100
     set age random 30
+    set sex one-of ["male" "female"]
   ]
 
   let current-food 0
