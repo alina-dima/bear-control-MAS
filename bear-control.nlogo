@@ -1,15 +1,22 @@
+extensions [ time ]
+
 breed [ bears bear ]
 
 turtles-own [ energy ]
 
+globals [
+  date
+]
+
 to setup
   clear-all
+  set date time:create "2019/01/01"
   import-pcolors "map.png"
 
   create-bears number-of-bears [
     move-to one-of patches with [ pcolor = 56.4 ]
     set color brown
-    set size 20
+    set size 15
     set shape "bear"
     set energy random 100
   ]
@@ -26,10 +33,18 @@ to setup
 end
 
 to go
+  print-date
   if not any? turtles [ stop ]
   check-energy
   move-turtles
+  set date time:plus date 1 "days"
   tick
+end
+
+to print-date
+  clear-output
+  output-print "Current date:"
+  output-print time:show date "MMMM d, yyyy"
 end
 
 to check-energy
@@ -46,8 +61,8 @@ to move-turtles
         set pcolor 56.4
       ]
     ]
-    if any? patches with [ pcolor = orange ] [
-      move-to one-of patches with [ pcolor = orange ]
+    if any? patches in-radius 43 with [ pcolor = orange ] [
+      move-to one-of patches in-radius 43 with [ pcolor = orange ]
     ]
     set energy energy - 1
   ]
@@ -56,11 +71,11 @@ end
 GRAPHICS-WINDOW
 355
 15
-727
-554
+736
+567
 -1
 -1
-0.35
+1.0
 1
 10
 1
@@ -70,21 +85,21 @@ GRAPHICS-WINDOW
 1
 1
 1
--265
-265
--386
-386
+-186
+186
+-271
+271
 1
 1
 1
-ticks
+days
 40.0
 
 BUTTON
-35
-46
-98
 79
+102
+142
+135
 NIL
 setup
 NIL
@@ -98,25 +113,25 @@ NIL
 1
 
 SLIDER
-26
-91
-198
-124
+70
+147
+242
+180
 number-of-bears
 number-of-bears
 0
-350
-183.0
+300
+185.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-123
-46
-186
-79
+167
+102
+230
+135
 NIL
 go
 T
@@ -130,25 +145,25 @@ NIL
 1
 
 SLIDER
-26
-135
-198
-168
+70
+191
+242
+224
 available-food
 available-food
 0
 1200
-0.0
+1200.0
 1
 1
 NIL
 HORIZONTAL
 
 PLOT
-24
-273
-224
-423
+61
+250
+261
+400
 Bear population over time
 Ticks
 Bear Count
@@ -161,6 +176,13 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot count turtles"
+
+OUTPUT
+83
+37
+238
+83
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
