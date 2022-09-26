@@ -37,7 +37,7 @@ to go
   print-date
   if not any? turtles [ stop ]
   check-energy
-  check-age
+
   move-turtles
   set date time:plus date 1 "days"
   tick
