@@ -2,7 +2,7 @@ extensions [ time ]
 
 breed [ bears bear ]
 
-turtles-own [ energy age sex ]
+turtles-own [ energy age sex]
 
 globals [
   date
