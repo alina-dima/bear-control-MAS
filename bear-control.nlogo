@@ -1,4 +1,4 @@
-extensions [ time ]
+extensions [ time rnd ]
 
 breed [ bears bear ]
 
@@ -92,7 +92,8 @@ to birth-cubs
 end
 
 to reproduce
-  hatch one-of [1 2 3 4] [
+  let pairs [ [ 1 0.2 ] [ 2 0.3 ] [ 3 0.3 ] [ 4 0.2 ] ]
+    hatch first rnd:weighted-one-of-list pairs [ [p] -> last p ] [
     set age 1
     set pregnant 0
     set pregnancy-duration 0
@@ -102,7 +103,7 @@ end
 
 to mate
   ask turtles with [((sex  = "female") and (age >= (365 * 5.5))) and pregnant != 1] [
-    let my-neighbours (other turtles) in-radius 100
+    let my-neighbours (other turtles) in-radius 5
     if any? my-neighbours with [((sex  = "male") and (age >= (365 * 5.5)))] [
       set pregnant 1
     ]
