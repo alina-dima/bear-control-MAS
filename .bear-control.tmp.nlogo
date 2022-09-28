@@ -2,10 +2,11 @@ extensions [ time ]
 
 breed [ bears bear ]
 
-turtles-own [ energy age sex]
+turtles-own [ energy age sex pregnant]
 
 globals [
   date
+  season
 ]
 
 to setup
@@ -21,6 +22,7 @@ to setup
     set energy random 100
     set age random 30
     set sex one-of ["male" "female"]
+    set pregnant 0
   ]
 
   let current-food 0
@@ -39,6 +41,7 @@ to go
   if not any? turtles [ stop ]
   check-energy
   check-age
+  set-season
   move-turtles
   set date time:plus date 1 "days"
   tick
@@ -50,6 +53,15 @@ to print-date
   output-print time:show date "MMMM d, yyyy"
 end
 
+to set-season
+  let month time:get "month" date
+  (ifelse
+    (month >= 5 and month < 8)
+    [ set season "mating" ]
+    (month >=
+    )
+end
+
 to check-energy
   ask turtles [
     if energy = 0 [ die ]
@@ -59,6 +71,15 @@ end
 to check-age
   ask turtles [
     if age = 365 * 30 [ die ]
+  ]
+end
+
+to mate
+  ask turtles with [((sex  = "female") and (age >= (365 * 5.5)))] [
+    let my-neighbours (other turtles) in-radius 10
+    if any? my-neighbours with [((sex  = "male") and (age >= (365 * 5.5)))] [
+      set pregnant 1
+    ]
   ]
 end
 
