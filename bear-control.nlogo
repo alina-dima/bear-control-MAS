@@ -2,10 +2,11 @@ extensions [ time ]
 
 breed [ bears bear ]
 
-turtles-own [ energy age sex pregnant]
+turtles-own [ energy age sex pregnant pregnancy-duration]
 
 globals [
   date
+  season
 ]
 
 to setup
@@ -19,7 +20,7 @@ to setup
     set size 15
     set shape "bear"
     set energy random 100
-    set age random 30
+    set age random 30 * 365
     set sex one-of ["male" "female"]
     set pregnant 0
   ]
@@ -40,7 +41,11 @@ to go
   if not any? turtles [ stop ]
   check-energy
   check-age
-  show date
+  set-season
+  if season = "mating" [
+    mate
+  ]
+  birth-cubs
   move-turtles
   set date time:plus date 1 "days"
   tick
@@ -50,6 +55,13 @@ to print-date
   clear-output
   output-print "Current date:"
   output-print time:show date "MMMM d, yyyy"
+end
+
+to set-season
+  let month time:get "month" date
+  ifelse (month >= 5 and month < 8)
+    [ set season "mating" ]
+    [ set season "normal" ]
 end
 
 to check-energy
@@ -64,9 +76,33 @@ to check-age
   ]
 end
 
+to birth-cubs
+  ask turtles with [pregnant = 1] [
+    ifelse pregnancy-duration = 194
+    [
+      reproduce
+      set pregnant 0
+      set pregnancy-duration 0
+    ]
+    [
+      set pregnancy-duration pregnancy-duration + 1
+    ]
+
+  ]
+end
+
+to reproduce
+  hatch one-of [1 2 3 4] [
+    set age 1
+    set pregnant 0
+    set pregnancy-duration 0
+    set sex one-of ["male" "female"]
+  ]
+end
+
 to mate
-  ask turtles with [((sex  = "female") and (age >= (365 * 5.5)))] [
-    let my-neighbours (other turtles) in-radius 10
+  ask turtles with [((sex  = "female") and (age >= (365 * 5.5))) and pregnant != 1] [
+    let my-neighbours (other turtles) in-radius 100
     if any? my-neighbours with [((sex  = "male") and (age >= (365 * 5.5)))] [
       set pregnant 1
     ]
@@ -202,6 +238,17 @@ OUTPUT
 37
 238
 83
+11
+
+MONITOR
+156
+531
+372
+576
+NIL
+count turtles with [pregnant = 1]
+17
+1
 11
 
 @#$#@#$#@
