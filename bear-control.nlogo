@@ -2,21 +2,21 @@ extensions [ time ]
 
 breed [ bears bear ]
 
-turtles-own [ kcal age sex agitation ]
+turtles-own [ kcal age sex agitation traveled-today]
 ;36.8 village color
 
 globals [
   date
   gained-kcal ;gained kcal per food
   lost-kcal ; lost kcal due to metabolism
-  traveled-distance ;distance/hour
+  traveled-distance ;distance/quarter
   travel-kcal-lost ;kcal lost per km
   hunger-threshold ; if the bear has less, it might enter a human settlement
 ]
 
 to setup
   clear-all
-  set date time:create "2019/01/01"
+  set date time:create "2018/01/01"
   import-pcolors "map.png"
 
   create-bears number-of-bears [
@@ -29,9 +29,9 @@ to setup
     set sex one-of ["male" "female"]
   ]
 
-  set gained-kcal 1000
+  set gained-kcal 2000
   set lost-kcal 10000
-  set traveled-distance 43 ;is 43 1 km?
+  set traveled-distance 14 ;is 43 1 km?
   set travel-kcal-lost 100
   regrow-food
   reset-ticks
@@ -82,33 +82,66 @@ end
 
 
 
-to move-turtles
-  let hour 0
-  while [hour < 17] [
-    ask turtles [
-     ifelse any? patches in-radius traveled-distance with [ pcolor = orange ] [
-      move-to one-of patches in-radius traveled-distance with [ pcolor = orange ]
-        set kcal kcal - travel-kcal-lost
-        eat-food
+;to move-turtles
+;  let quarter 0
+;  while [quarter < 3] [
+;    ask turtles [
+;     ifelse any? patches in-radius traveled-distance with [ pcolor = orange ] [
+;      move-to one-of patches in-radius traveled-distance with [ pcolor = orange ]
+;        set kcal kcal - travel-kcal-lost
+;        eat-food
+;
+;      ] [
+;        ifelse kcal < hunger-threshold and any? patches in-radius traveled-distance with [pcolor = 36.8] [
+;          ; move to human turf
+;          move-to one-of patches in-radius traveled-distance with [pcolor = 36.8]
+;          eat-food
+;        ] [
+;          let dist random-normal 43 10
+;          move-to one-of patches in-radius dist with [pcolor = 56.4]
+;          set kcal kcal - travel-kcal-lost * dist / traveled-distance
+;        ]
+;      ]
+;    ]
+;    set quarter quarter + 1
+;  ]
+;end
 
-    ] [
+to move-turtles
+  let quarter 0
+  ask turtles [
+    set traveled-today 0
+  ]
+  while [quarter < 3] [
+    ask turtles [
+      let new-patch patch-here
+      ifelse any? patches in-radius traveled-distance with [ pcolor = orange ] [
+        set new-patch one-of patches in-radius traveled-distance with [ pcolor = orange ]
+      ] [
         ifelse kcal < hunger-threshold and any? patches in-radius traveled-distance with [pcolor = 36.8] [
           ; move to human turf
-          move-to one-of patches in-radius traveled-distance with [pcolor = 36.8]
+          set new-patch one-of patches in-radius traveled-distance with [pcolor = 36.8]
         ] [
-          let dist random-normal 430 100
-          move-to one-of patches in-radius dist with [pcolor = 56.4]
-          set kcal kcal - travel-kcal-lost * dist / traveled-distance]
+          let dist random-normal 70 20
+          if dist < 0 [set dist 0]
+          set new-patch one-of patches in-radius dist with [pcolor = 56.4]
         ]
+      ]
+      let dist distance new-patch
+      set traveled-today traveled-today + dist
+      let journey-cost dist * travel-kcal-lost
+      set kcal kcal - journey-cost
+      move-to new-patch
+      eat-food
     ]
-    set hour hour + 1
+    set quarter quarter + 1
   ]
-
-
 end
 
 to eat-food
-  set kcal kcal + gained-kcal
+  if [pcolor] of patch-here != 56.4 [
+    set kcal kcal + gained-kcal
+  ]
   if [pcolor] of patch-here = orange [
     ask patch-here [
       set pcolor 56.4
@@ -140,8 +173,8 @@ GRAPHICS-WINDOW
 186
 -271
 271
-1
-1
+0
+0
 1
 days
 40.0
@@ -172,7 +205,7 @@ number-of-bears
 number-of-bears
 0
 300
-199.0
+157.0
 1
 1
 NIL
@@ -204,17 +237,17 @@ available-food
 available-food
 0
 8000
-4076.0
+4095.0
 1
 1
 NIL
 HORIZONTAL
 
 PLOT
-61
-250
-261
-400
+10
+234
+170
+354
 Bear population over time
 Ticks
 Bear Count
@@ -236,10 +269,10 @@ OUTPUT
 11
 
 PLOT
-64
-415
-264
-565
+7
+356
+169
+493
 food over time
 ticks
 food count
@@ -262,11 +295,47 @@ regrowth-rate
 regrowth-rate
 1
 100
-12.0
+32.0
 1
 1
 NIL
 HORIZONTAL
+
+PLOT
+183
+234
+343
+354
+% of angery bears
+NIL
+NIL
+0.0
+10.0
+0.0
+1.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot (count turtles with [agitation > 0]) / (count turtles)"
+
+PLOT
+175
+356
+345
+493
+avg traveled distance per day
+days
+km
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [traveled-today] of turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -626,7 +695,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.2
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
