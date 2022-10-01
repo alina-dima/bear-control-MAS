@@ -1,11 +1,12 @@
-extensions [ time ]
+extensions [ time rnd ]
 
 breed [ bears bear ]
 
-turtles-own [ energy age sex]
-
+turtles-own [ energy age sex pregnant pregnancy-duration time-since-cub-birth ]
 globals [
   date
+  season
+  sexual-maturity-age
 ]
 
 to setup
@@ -13,14 +14,20 @@ to setup
   set date time:create "2019/01/01"
   import-pcolors "map.png"
 
+  set sexual-maturity-age ( 5.5 * 365 )
+
   create-bears number-of-bears [
     move-to one-of patches with [ pcolor = 56.4 ]
     set color brown
     set size 15
     set shape "bear"
     set energy random 100
-    set age random 30
+    set age random 30 * 365
     set sex one-of ["male" "female"]
+    set pregnant 0
+    ifelse ( age >= sexual-maturity-age )
+    [ set time-since-cub-birth random ( 365 * 3 ) ];; not al females will mate immediately
+    [ set time-since-cub-birth ( 365 * 3 ) ] ;; so when cubs reach maturity, they can immediately get pregnant
   ]
 
   let current-food 0
@@ -28,7 +35,7 @@ to setup
     ask one-of patches with [ pcolor = 56.4 ] [
       set pcolor orange
     ]
-    set current-food current-food + 1
+    set current-food current-food + 0.05
   ]
 
   reset-ticks
@@ -39,7 +46,14 @@ to go
   if not any? turtles [ stop ]
   check-energy
   check-age
+  set-season
+  if season = "mating" [
+    mate
+  ]
+  birth-cubs
+  update-time-since-cub-birth
   move-turtles
+  show season
   set date time:plus date 1 "days"
   tick
 end
@@ -50,15 +64,71 @@ to print-date
   output-print time:show date "MMMM d, yyyy"
 end
 
+to set-season
+  let month time:get "month" date
+  ifelse (month >= 5 and month < 8)
+    [ set season "mating" ]
+    [ set season "normal" ]
+end
+
 to check-energy
   ask turtles [
     if energy = 0 [ die ]
   ]
 end
 
+;; Bears die at 30
 to check-age
   ask turtles [
     if age = 365 * 30 [ die ]
+  ]
+end
+
+;; Updated time since a female bear last gave birth to cubs
+to update-time-since-cub-birth
+  ask turtles with [ (sex = "female" ) and ( age >= sexual-maturity-age ) and ( pregnant = 0 ) ] [
+    set time-since-cub-birth time-since-cub-birth + 1
+  ]
+end
+
+
+;; Produces offspring from a pregnant female bear if to 'term' and
+;; tracks pregnancy duration.
+to birth-cubs
+  ask turtles with [ pregnant = 1 ] [
+    ifelse pregnancy-duration = 194
+    [
+      reproduce
+      set pregnant 0
+      set pregnancy-duration 0
+      set time-since-cub-birth 0
+    ]
+    [
+      set pregnancy-duration pregnancy-duration + 1
+    ]
+
+  ]
+end
+
+;; Produces a number of cubs based on weighted list
+to reproduce
+  let pairs [ [ 1 0.2 ] [ 2 0.3 ] [ 3 0.3 ] [ 4 0.2 ] ]
+    hatch first rnd:weighted-one-of-list pairs [ [p] -> last p ] [
+    set age 1
+    set pregnant 0
+    set pregnancy-duration 0
+    set sex one-of [ "male" "female" ]
+  ]
+end
+
+;; Non-pregnant female bears that reached maturity mate if
+;; mature bears are close by
+to mate
+  ask turtles with [ ( (sex  = "female") and (age >= sexual-maturity-age ) and ( pregnant != 1 ) and ( time-since-cub-birth >= ( 365 * 2.5 ) ) ) ] [
+    let my-neighbours (other turtles) in-radius 1
+    if any? my-neighbours with [ ( ( sex  = "male" ) and ( age >= sexual-maturity-age ) ) ] [
+      set pregnant 1
+    ]
   ]
 end
 
@@ -191,6 +261,17 @@ OUTPUT
 37
 238
 83
+11
+
+MONITOR
+156
+531
+372
+576
+NIL
+count turtles with [pregnant = 1]
+17
+1
 11
 
 @#$#@#$#@
