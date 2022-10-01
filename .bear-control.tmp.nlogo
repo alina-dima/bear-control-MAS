@@ -1,4 +1,4 @@
-extensions [ time ]
+extensions [ time rnd ]
 
 breed [ bears bear ]
 breed [ hunters hunter ]
@@ -17,43 +17,28 @@ hunters-own [
   hunted
 ]
 
-<<<<<<< Updated upstream
-turtles-own [ energy age sex]
-
-=======
->>>>>>> Stashed changes
 globals [
   first-day
   date
-<<<<<<< Updated upstream
-=======
   season
   sexual-maturity-age
   hunted-bears
->>>>>>> Stashed changes
 ]
 
 to setup
   clear-all
   import-pcolors "map.png"
 
-<<<<<<< Updated upstream
-=======
   set first-day time:create "2019/01/01"
   set date first-day
   set sexual-maturity-age ( 5.5 * 365 )
   set hunted-bears 0
 
->>>>>>> Stashed changes
   create-bears number-of-bears [
     move-to one-of patches with [ pcolor = 56.4 ]
     set size 15
     set shape "bear"
     set energy random 100
-<<<<<<< Updated upstream
-    set age random 30
-    set sex one-of ["male" "female"]
-=======
     set age random 30 * 365
     set sex one-of [ "male" "female" ]
     ifelse ( sex = "female" )
@@ -72,7 +57,6 @@ to setup
     set hunt-day random 365
     set hunted 0
     hide-turtle
->>>>>>> Stashed changes
   ]
 
   let current-food 0
@@ -88,12 +72,6 @@ end
 
 to go
   print-date
-<<<<<<< Updated upstream
-  if not any? turtles [ stop ]
-  check-energy
-  check-age
-  move-turtles
-=======
   if not any? bears [ stop ]
   ask bears [
     check-energy
@@ -108,7 +86,6 @@ to go
   ]
   ask hunters with [ hunted = 1 ] [ die ]
   hunt
->>>>>>> Stashed changes
   set date time:plus date 1 "days"
   tick
 end
@@ -119,22 +96,22 @@ to print-date
   output-print time:show date "MMMM d, yyyy"
 end
 
+to set-season
+  let month time:get "month" date
+  ifelse (month >= 5 and month < 8)
+    [ set season "mating" ]
+    [ set season "normal" ]
+end
+
 to check-energy
   if energy = 0 [ die ]
 end
 
+;; Bears die at 30
 to check-age
   if age = 365 * 30 [ die ]
 end
 
-<<<<<<< Updated upstream
-to move-turtles
-  ask turtles [
-    if [ pcolor ] of patch-here = orange [
-      set energy energy + 10
-      ask patch-here [
-        set pcolor 56.4
-=======
 ;; Updated time since a female bear last gave birth to cubs
 to update-time-since-cub-birth
   ask bears with [ (sex = "female" ) and ( age >= sexual-maturity-age ) and ( pregnant = 0 ) ] [
@@ -196,10 +173,9 @@ to hunt
         ask hunters with [ hunt-day = ticks ] [
           set hunt-day ticks + 1 + random ( 365 - ticks - 1)
         ]
->>>>>>> Stashed changes
       ]
     ]
-
+  ][
     if any? hunters with [ hunt-day = ticks ] and any? bears [
       ask one-of hunters with [ hunt-day = ticks ] [
         show-turtle
@@ -341,8 +317,6 @@ OUTPUT
 115
 11
 
-<<<<<<< Updated upstream
-=======
 MONITOR
 768
 325
@@ -361,7 +335,7 @@ SWITCH
 265
 restrictive-hunting?
 restrictive-hunting?
-1
+0
 1
 -1000
 
@@ -391,7 +365,6 @@ hunted-bears
 1
 11
 
->>>>>>> Stashed changes
 @#$#@#$#@
 ## WHAT IS IT?
 
