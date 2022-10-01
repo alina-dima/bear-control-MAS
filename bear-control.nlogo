@@ -1,4 +1,4 @@
-extensions [ time ]
+extensions [ time rnd ]
 
 breed [ bears bear ]
 breed [ hunters hunter ]
@@ -17,43 +17,28 @@ hunters-own [
   hunted
 ]
 
-<<<<<<< Updated upstream
-turtles-own [ energy age sex ]
-
-=======
->>>>>>> Stashed changes
 globals [
   first-day
   date
-<<<<<<< Updated upstream
-=======
   season
   sexual-maturity-age
   hunted-bears
->>>>>>> Stashed changes
 ]
 
 to setup
   clear-all
   import-pcolors "map.png"
 
-<<<<<<< Updated upstream
-=======
   set first-day time:create "2019/01/01"
   set date first-day
   set sexual-maturity-age ( 5.5 * 365 )
   set hunted-bears 0
 
->>>>>>> Stashed changes
   create-bears number-of-bears [
     move-to one-of patches with [ pcolor = 56.4 ]
     set size 15
     set shape "bear"
     set energy random 100
-<<<<<<< Updated upstream
-    set age random 30
-    set sex one-of ["male" "female"]
-=======
     set age random 30 * 365
     set sex one-of [ "male" "female" ]
     ifelse ( sex = "female" )
@@ -72,7 +57,6 @@ to setup
     set hunt-day random 365
     set hunted 0
     hide-turtle
->>>>>>> Stashed changes
   ]
 
   let current-food 0
@@ -88,12 +72,6 @@ end
 
 to go
   print-date
-<<<<<<< Updated upstream
-  if not any? turtles [ stop ]
-  check-energy
-  check-age
-  move-turtles
-=======
   if not any? bears [ stop ]
   ask bears [
     check-energy
@@ -108,7 +86,6 @@ to go
   ]
   ask hunters with [ hunted = 1 ] [ die ]
   hunt
->>>>>>> Stashed changes
   set date time:plus date 1 "days"
   tick
 end
@@ -119,22 +96,22 @@ to print-date
   output-print time:show date "MMMM d, yyyy"
 end
 
+to set-season
+  let month time:get "month" date
+  ifelse (month >= 5 and month < 8)
+    [ set season "mating" ]
+    [ set season "normal" ]
+end
+
 to check-energy
   if energy = 0 [ die ]
 end
 
+;; Bears die at 30
 to check-age
   if age = 365 * 30 [ die ]
 end
 
-<<<<<<< Updated upstream
-to move-turtles
-  ask turtles [
-    if [ pcolor ] of patch-here = orange [
-      set energy energy + 10
-      ask patch-here [
-        set pcolor 56.4
-=======
 ;; Updated time since a female bear last gave birth to cubs
 to update-time-since-cub-birth
   ask bears with [ (sex = "female" ) and ( age >= sexual-maturity-age ) and ( pregnant = 0 ) ] [
@@ -206,7 +183,6 @@ to hunt
         ask one-of bears-here [ die ]
         set hunted-bears hunted-bears + 1
         set hunted 1
->>>>>>> Stashed changes
       ]
     ]
   ]
@@ -226,9 +202,9 @@ to move-turtles
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-351
+350
 10
-732
+731
 562
 -1
 -1
@@ -253,10 +229,10 @@ days
 40.0
 
 BUTTON
-93
-50
-156
-83
+91
+58
+154
+91
 NIL
 setup
 NIL
@@ -270,25 +246,25 @@ NIL
 1
 
 SLIDER
-82
+83
 123
-254
+255
 156
 number-of-bears
 number-of-bears
 0
 300
-27.0
+185.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-181
-50
-244
-83
+179
+58
+242
+91
 NIL
 go
 T
@@ -302,9 +278,9 @@ NIL
 1
 
 SLIDER
-82
+83
 167
-254
+255
 200
 available-food
 available-food
@@ -317,10 +293,10 @@ NIL
 HORIZONTAL
 
 PLOT
-774
-149
-974
-299
+781
+105
+981
+255
 Bear population over time
 Ticks
 Bear Count
@@ -335,63 +311,60 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count turtles"
 
 OUTPUT
-799
-69
-954
-115
+797
+31
+952
+77
 11
 
-<<<<<<< Updated upstream
-=======
 MONITOR
-768
-325
-984
-370
+773
+269
+989
+314
 Number of pregnant bears
 count turtles with [pregnant = 1]
 17
 1
 11
 
+SLIDER
+82
+233
+254
+266
+hunting-permits
+hunting-permits
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
 SWITCH
-85
-232
-248
-265
+86
+282
+249
+315
 restrictive-hunting?
 restrictive-hunting?
 0
 1
 -1000
 
-SLIDER
-77
-274
-249
-307
-hunting-permits
-hunting-permits
-0
-100
-100.0
-1
-1
-NIL
-HORIZONTAL
-
 MONITOR
-803
-389
-951
-434
+809
+327
+957
+372
 Number of hunted bears
 hunted-bears
 17
 1
 11
 
->>>>>>> Stashed changes
 @#$#@#$#@
 ## WHAT IS IT?
 
@@ -624,27 +597,6 @@ Polygon -7500403 true true 105 90 120 195 90 285 105 300 135 300 150 225 165 300
 Rectangle -7500403 true true 127 79 172 94
 Polygon -7500403 true true 195 90 240 150 225 180 165 105
 Polygon -7500403 true true 105 90 60 150 75 180 135 105
-
-person construction
-false
-0
-Rectangle -7500403 true true 123 76 176 95
-Polygon -1 true false 105 90 60 195 90 210 115 162 184 163 210 210 240 195 195 90
-Polygon -13345367 true false 180 195 120 195 90 285 105 300 135 300 150 225 165 300 195 300 210 285
-Circle -7500403 true true 110 5 80
-Line -16777216 false 148 143 150 196
-Rectangle -16777216 true false 116 186 182 198
-Circle -1 true false 152 143 9
-Circle -1 true false 152 166 9
-Rectangle -16777216 true false 179 164 183 186
-Polygon -955883 true false 180 90 195 90 195 165 195 195 150 195 150 120 180 90
-Polygon -955883 true false 120 90 105 90 105 165 105 195 150 195 150 120 120 90
-Rectangle -16777216 true false 135 114 150 120
-Rectangle -16777216 true false 135 144 150 150
-Rectangle -16777216 true false 135 174 150 180
-Polygon -955883 true false 105 42 111 16 128 2 149 0 178 6 190 18 192 28 220 29 216 34 201 39 167 35
-Polygon -6459832 true false 54 253 54 238 219 73 227 78
-Polygon -16777216 true false 15 285 15 255 30 225 45 225 75 255 75 270 45 285
 
 plant
 false
