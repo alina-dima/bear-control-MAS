@@ -1,33 +1,62 @@
 extensions [ time rnd ]
 
 breed [ bears bear ]
+breed [ hunters hunter ]
 
-turtles-own [ energy age sex pregnant pregnancy-duration time-since-cub-birth ]
+bears-own [
+  energy
+  age
+  sex
+  pregnant
+  pregnancy-duration
+  time-since-cub-birth
+]
+
+hunters-own [
+  hunt-day
+  hunted
+]
+
 globals [
+  first-day
   date
   season
   sexual-maturity-age
+  hunted-bears
 ]
 
 to setup
   clear-all
-  set date time:create "2019/01/01"
   import-pcolors "map.png"
 
+  set first-day time:create "2019/01/01"
+  set date first-day
   set sexual-maturity-age ( 5.5 * 365 )
+  set hunted-bears 0
 
   create-bears number-of-bears [
     move-to one-of patches with [ pcolor = 56.4 ]
-    set color brown
     set size 15
     set shape "bear"
     set energy random 100
     set age random 30 * 365
-    set sex one-of ["male" "female"]
+    set sex one-of [ "male" "female" ]
+    ifelse ( sex = "female" )
+      [ set color pink ]
+      [ set color blue ]
     set pregnant 0
     ifelse ( age >= sexual-maturity-age )
-    [ set time-since-cub-birth random ( 365 * 3 ) ];; not al females will mate immediately
-    [ set time-since-cub-birth ( 365 * 3 ) ] ;; so when cubs reach maturity, they can immediately get pregnant
+      [ set time-since-cub-birth random ( 365 * 3 ) ] ;; not all females will mate immediately
+      [ set time-since-cub-birth ( 365 * 3 ) ] ;; so when cubs reach maturity, they can immediately get pregnant
+  ]
+
+  create-hunters hunting-permits [
+    set size 20
+    set color red
+    set shape "person"
+    set hunt-day random 365
+    set hunted 0
+    hide-turtle
   ]
 
   let current-food 0
@@ -43,17 +72,20 @@ end
 
 to go
   print-date
-  if not any? turtles [ stop ]
-  check-energy
-  check-age
-  set-season
-  if season = "mating" [
-    mate
+  if not any? bears [ stop ]
+  ask bears [
+    check-energy
+    check-age
+    set-season
+    if season = "mating" [
+      mate
+    ]
+    birth-cubs
+    update-time-since-cub-birth
+    move-turtles
   ]
-  birth-cubs
-  update-time-since-cub-birth
-  move-turtles
-  show season
+  ask hunters with [ hunted = 1 ] [ die ]
+  hunt
   set date time:plus date 1 "days"
   tick
 end
@@ -72,21 +104,17 @@ to set-season
 end
 
 to check-energy
-  ask turtles [
-    if energy = 0 [ die ]
-  ]
+  if energy = 0 [ die ]
 end
 
 ;; Bears die at 30
 to check-age
-  ask turtles [
-    if age = 365 * 30 [ die ]
-  ]
+  if age = 365 * 30 [ die ]
 end
 
 ;; Updated time since a female bear last gave birth to cubs
 to update-time-since-cub-birth
-  ask turtles with [ (sex = "female" ) and ( age >= sexual-maturity-age ) and ( pregnant = 0 ) ] [
+  ask bears with [ (sex = "female" ) and ( age >= sexual-maturity-age ) and ( pregnant = 0 ) ] [
     set time-since-cub-birth time-since-cub-birth + 1
   ]
 end
@@ -95,15 +123,13 @@ end
 ;; Produces offspring from a pregnant female bear if to 'term' and
 ;; tracks pregnancy duration.
 to birth-cubs
-  ask turtles with [ pregnant = 1 ] [
-    ifelse pregnancy-duration = 194
-    [
+  ask bears with [ pregnant = 1 ] [
+    ifelse pregnancy-duration = 194 [
       reproduce
       set pregnant 0
       set pregnancy-duration 0
       set time-since-cub-birth 0
-    ]
-    [
+    ][
       set pregnancy-duration pregnancy-duration + 1
     ]
 
@@ -124,34 +150,62 @@ end
 ;; Non-pregnant female bears that reached maturity mate if
 ;; mature bears are close by
 to mate
-  ask turtles with [ ( (sex  = "female") and (age >= sexual-maturity-age ) and ( pregnant != 1 ) and ( time-since-cub-birth >= ( 365 * 2.5 ) ) ) ] [
-    let my-neighbours (other turtles) in-radius 1
+  ask bears with [ ( ( sex  = "female" ) and ( age >= sexual-maturity-age ) and ( pregnant != 1 ) and ( time-since-cub-birth >= ( 365 * 2.5 ) ) ) ] [
+    let my-neighbours (other bears) in-radius 1
     if any? my-neighbours with [ ( ( sex  = "male" ) and ( age >= sexual-maturity-age ) ) ] [
       set pregnant 1
     ]
   ]
 end
 
-to move-turtles
-  ask turtles [
-    if [ pcolor ] of patch-here = orange [
-      set energy energy + 10
-      ask patch-here [
-        set pcolor 56.4
+to hunt
+  ifelse restrictive-hunting? [
+    if any? hunters with [ hunt-day = ticks ] [
+      ifelse any? bears with [ age > 2 * 365 ] [
+        ask one-of hunters with [ hunt-day = ticks ] [
+          show-turtle
+          move-to one-of bears with [ age > 2 * 365]
+          ask one-of bears-here with [ age > 2 * 365]  [ die ]
+          set hunted-bears hunted-bears + 1
+          set hunted 1
+        ]
+      ][
+        ask hunters with [ hunt-day = ticks ] [
+          set hunt-day ticks + 1 + random ( 365 - ticks - 1)
+        ]
       ]
     ]
-    if any? patches in-radius 43 with [ pcolor = orange ] [
-      move-to one-of patches in-radius 43 with [ pcolor = orange ]
+  ][
+    if any? hunters with [ hunt-day = ticks ] and any? bears [
+      ask one-of hunters with [ hunt-day = ticks ] [
+        show-turtle
+        move-to one-of bears
+        ask one-of bears-here [ die ]
+        set hunted-bears hunted-bears + 1
+        set hunted 1
+      ]
     ]
-    set energy energy - 1
   ]
+end
+
+to move-turtles
+  if [ pcolor ] of patch-here = orange [
+    set energy energy + 10
+    ask patch-here [
+      set pcolor 56.4
+    ]
+  ]
+  if any? patches in-radius 43 with [ pcolor = orange ] [
+    move-to one-of patches in-radius 43 with [ pcolor = orange ]
+  ]
+  set energy energy - 1
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-355
-15
-736
-567
+351
+10
+732
+562
 -1
 -1
 1.0
@@ -175,10 +229,10 @@ days
 40.0
 
 BUTTON
-79
-102
-142
-135
+93
+50
+156
+83
 NIL
 setup
 NIL
@@ -192,25 +246,25 @@ NIL
 1
 
 SLIDER
-70
-147
-242
-180
+82
+123
+254
+156
 number-of-bears
 number-of-bears
 0
 300
-185.0
+27.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-167
-102
-230
-135
+181
+50
+244
+83
 NIL
 go
 T
@@ -224,10 +278,10 @@ NIL
 1
 
 SLIDER
-70
-191
-242
-224
+82
+167
+254
+200
 available-food
 available-food
 0
@@ -239,10 +293,10 @@ NIL
 HORIZONTAL
 
 PLOT
-61
-250
-261
-400
+774
+149
+974
+299
 Bear population over time
 Ticks
 Bear Count
@@ -257,19 +311,56 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count turtles"
 
 OUTPUT
-83
-37
-238
-83
+799
+69
+954
+115
 11
 
 MONITOR
-156
-531
-372
-576
-NIL
+768
+325
+984
+370
+Number of pregnant bears
 count turtles with [pregnant = 1]
+17
+1
+11
+
+SWITCH
+85
+232
+248
+265
+restrictive-hunting?
+restrictive-hunting?
+0
+1
+-1000
+
+SLIDER
+77
+274
+249
+307
+hunting-permits
+hunting-permits
+0
+100
+100.0
+1
+1
+NIL
+HORIZONTAL
+
+MONITOR
+803
+389
+951
+434
+Number of hunted bears
+hunted-bears
 17
 1
 11
@@ -329,9 +420,9 @@ Polygon -7500403 true true 150 0 0 150 105 150 105 293 195 293 195 150 300 150
 bear
 true
 0
-Circle -6459832 true false 30 60 240
-Circle -6459832 true false 30 30 90
-Circle -6459832 true false 180 30 90
+Circle -7500403 true true 30 60 240
+Circle -7500403 true true 30 30 90
+Circle -7500403 true true 180 30 90
 Circle -16777216 true false 90 120 30
 Circle -16777216 true false 180 120 30
 Polygon -16777216 true false 120 180
@@ -506,6 +597,27 @@ Polygon -7500403 true true 105 90 120 195 90 285 105 300 135 300 150 225 165 300
 Rectangle -7500403 true true 127 79 172 94
 Polygon -7500403 true true 195 90 240 150 225 180 165 105
 Polygon -7500403 true true 105 90 60 150 75 180 135 105
+
+person construction
+false
+0
+Rectangle -7500403 true true 123 76 176 95
+Polygon -1 true false 105 90 60 195 90 210 115 162 184 163 210 210 240 195 195 90
+Polygon -13345367 true false 180 195 120 195 90 285 105 300 135 300 150 225 165 300 195 300 210 285
+Circle -7500403 true true 110 5 80
+Line -16777216 false 148 143 150 196
+Rectangle -16777216 true false 116 186 182 198
+Circle -1 true false 152 143 9
+Circle -1 true false 152 166 9
+Rectangle -16777216 true false 179 164 183 186
+Polygon -955883 true false 180 90 195 90 195 165 195 195 150 195 150 120 180 90
+Polygon -955883 true false 120 90 105 90 105 165 105 195 150 195 150 120 120 90
+Rectangle -16777216 true false 135 114 150 120
+Rectangle -16777216 true false 135 144 150 150
+Rectangle -16777216 true false 135 174 150 180
+Polygon -955883 true false 105 42 111 16 128 2 149 0 178 6 190 18 192 28 220 29 216 34 201 39 167 35
+Polygon -6459832 true false 54 253 54 238 219 73 227 78
+Polygon -16777216 true false 15 285 15 255 30 225 45 225 75 255 75 270 45 285
 
 plant
 false
