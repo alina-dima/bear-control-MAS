@@ -82,14 +82,14 @@ to go
   ask bears [
     check-kcal
     check-age
-    set-season
-    if season = "mating" [
-      mate
-    ]
-    birth-cubs
-    update-time-since-cub-birth
-    move-turtles
   ]
+  set-season
+  if season = "mating" [
+    mate
+  ]
+  birth-cubs
+  update-time-since-cub-birth
+  move-turtles
   ask hunters with [ hunted = 1 ] [ die ]
   hunt
   set date time:plus date 1 "days"
@@ -111,9 +111,7 @@ to set-season
 end
 
 to check-kcal
-  ask bears [
-    if kcal <= 0 [ die ]
-  ]
+  if kcal <= 0 [ die ]
 end
 
 ;; Bears die at 30
@@ -265,6 +263,7 @@ to move-turtles
       eat-food
     ]
     set quarter quarter + 1
+    show quarter
   ]
 end
 
@@ -367,7 +366,7 @@ available-food
 available-food
 0
 8000
-4095.0
+5554.0
 1
 1
 NIL
@@ -404,7 +403,7 @@ MONITOR
 989
 314
 Number of pregnant bears
-count turtles with [pregnant = 1]
+count bears with [pregnant = 1]
 17
 1
 11
@@ -513,7 +512,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [traveled-today] of bears"
+"default" 1.0 0 -16777216 true "" "plot mean [traveled-today] of bears / 7.3"
 
 @#$#@#$#@
 ## WHAT IS IT?
