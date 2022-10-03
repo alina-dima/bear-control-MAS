@@ -280,10 +280,6 @@ to eat-food
   if [pcolor] of patch-here = 36.8 [
     set agitation agitation + 1
   ]
-  if any? patches in-radius 43 with [ pcolor = orange ] [
-    move-to one-of patches in-radius 43 with [ pcolor = orange ]
-  ]
-  set energy energy - 1
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -331,15 +327,15 @@ NIL
 1
 
 SLIDER
-83
-123
-255
-156
+81
+174
+253
+207
 number-of-bears
 number-of-bears
 0
 300
-157.0
+283.0
 1
 1
 NIL
@@ -363,10 +359,10 @@ NIL
 1
 
 SLIDER
-83
-167
-255
-200
+81
+218
+253
+251
 available-food
 available-food
 0
@@ -414,10 +410,10 @@ count turtles with [pregnant = 1]
 11
 
 SLIDER
-82
-233
-254
-266
+80
+284
+252
+317
 hunting-permits
 hunting-permits
 0
@@ -429,10 +425,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-86
-282
-249
-315
+84
+333
+247
+366
 restrictive-hunting?
 restrictive-hunting?
 0
@@ -451,10 +447,10 @@ hunted-bears
 11
 
 PLOT
-7
-356
-169
-493
+783
+404
+945
+541
 food over time
 ticks
 food count
@@ -469,10 +465,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count(patches with [pcolor = orange])"
 
 SLIDER
-73
-60
-245
-93
+81
+121
+253
+154
 regrowth-rate
 regrowth-rate
 1
@@ -484,11 +480,11 @@ NIL
 HORIZONTAL
 
 PLOT
-183
-234
-343
-354
-% of angery bears
+1025
+216
+1185
+336
+% of angry bears
 NIL
 NIL
 0.0
@@ -499,13 +495,13 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot (count turtles with [agitation > 0]) / (count turtles)"
+"default" 1.0 0 -16777216 true "" "plot (count bears with [agitation > 0]) / (count bears)"
 
 PLOT
-175
-356
-345
-493
+951
+404
+1121
+541
 avg traveled distance per day
 days
 km
@@ -517,7 +513,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [traveled-today] of turtles"
+"default" 1.0 0 -16777216 true "" "plot mean [traveled-today] of bears"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -877,7 +873,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
