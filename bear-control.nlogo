@@ -1,12 +1,15 @@
+;36.8 village color
 extensions [ time rnd ]
 
 breed [ bears bear ]
 breed [ hunters hunter ]
 
 bears-own [
-  energy
+  kcal
   age
   sex
+  agitation
+  traveled-today
   pregnant
   pregnancy-duration
   time-since-cub-birth
@@ -20,6 +23,11 @@ hunters-own [
 globals [
   first-day
   date
+  gained-kcal ;gained kcal per food
+  lost-kcal ; lost kcal due to metabolism
+  traveled-distance ;distance/quarter
+  travel-kcal-lost ;kcal lost per km
+  hunger-threshold ; if the bear has less, it might enter a human settlement
   season
   sexual-maturity-age
   hunted-bears
@@ -38,7 +46,7 @@ to setup
     move-to one-of patches with [ pcolor = 56.4 ]
     set size 15
     set shape "bear"
-    set energy random 100
+    set kcal random 20000
     set age random 30 * 365
     set sex one-of [ "male" "female" ]
     ifelse ( sex = "female" )
@@ -59,22 +67,20 @@ to setup
     hide-turtle
   ]
 
-  let current-food 0
-  while [ current-food < available-food ] [
-    ask one-of patches with [ pcolor = 56.4 ] [
-      set pcolor orange
-    ]
-    set current-food current-food + 1
-  ]
-
+  set gained-kcal 2000
+  set lost-kcal 10000
+  set traveled-distance 14 ;is 43 1 km?
+  set travel-kcal-lost 100
+  regrow-food
   reset-ticks
 end
 
 to go
   print-date
+  regrow-food
   if not any? bears [ stop ]
   ask bears [
-    check-energy
+    check-kcal
     check-age
     set-season
     if season = "mating" [
@@ -87,6 +93,7 @@ to go
   ask hunters with [ hunted = 1 ] [ die ]
   hunt
   set date time:plus date 1 "days"
+
   tick
 end
 
@@ -103,8 +110,10 @@ to set-season
     [ set season "normal" ]
 end
 
-to check-energy
-  if energy = 0 [ die ]
+to check-kcal
+  ask bears [
+    if kcal <= 0 [ die ]
+  ]
 end
 
 ;; Bears die at 30
@@ -188,17 +197,89 @@ to hunt
   ]
 end
 
+
+to regrow-food
+  let needed-food 0
+  let current-food count(patches with [pcolor = orange])
+  while [ needed-food < (available-food - current-food) ] [
+      if (random 100 < regrowth-rate) [
+        ask one-of patches with [ pcolor = 56.4 ]
+        [set pcolor orange]
+    ]
+    set needed-food needed-food + 1
+  ]
+end
+
+
+
+;to move-turtles
+;  let quarter 0
+;  while [quarter < 3] [
+;    ask turtles [
+;     ifelse any? patches in-radius traveled-distance with [ pcolor = orange ] [
+;      move-to one-of patches in-radius traveled-distance with [ pcolor = orange ]
+;        set kcal kcal - travel-kcal-lost
+;        eat-food
+;
+;      ] [
+;        ifelse kcal < hunger-threshold and any? patches in-radius traveled-distance with [pcolor = 36.8] [
+;          ; move to human turf
+;          move-to one-of patches in-radius traveled-distance with [pcolor = 36.8]
+;          eat-food
+;        ] [
+;          let dist random-normal 43 10
+;          move-to one-of patches in-radius dist with [pcolor = 56.4]
+;          set kcal kcal - travel-kcal-lost * dist / traveled-distance
+;        ]
+;      ]
+;    ]
+;    set quarter quarter + 1
+;  ]
+;end
+
 to move-turtles
-  if [ pcolor ] of patch-here = orange [
-    set energy energy + 10
+  let quarter 0
+  ask bears [
+    set traveled-today 0
+  ]
+  while [quarter < 3] [
+    ask bears [
+      let new-patch patch-here
+      ifelse any? patches in-radius traveled-distance with [ pcolor = orange ] [
+        set new-patch one-of patches in-radius traveled-distance with [ pcolor = orange ]
+      ] [
+        ifelse kcal < hunger-threshold and any? patches in-radius traveled-distance with [pcolor = 36.8] [
+          ; move to human turf
+          set new-patch one-of patches in-radius traveled-distance with [pcolor = 36.8]
+        ] [
+          let dist random-normal 70 20
+          if dist < 0 [set dist 0]
+          set new-patch one-of patches in-radius dist with [pcolor = 56.4]
+        ]
+      ]
+      let dist distance new-patch
+      set traveled-today traveled-today + dist
+      let journey-cost dist * travel-kcal-lost
+      set kcal kcal - journey-cost
+      move-to new-patch
+      eat-food
+    ]
+    set quarter quarter + 1
+  ]
+end
+
+to eat-food
+  if [pcolor] of patch-here != 56.4 [
+    set kcal kcal + gained-kcal
+  ]
+  if [pcolor] of patch-here = orange [
     ask patch-here [
       set pcolor 56.4
     ]
   ]
-  if any? patches in-radius 43 with [ pcolor = orange ] [
-    move-to one-of patches in-radius 43 with [ pcolor = orange ]
+  if [pcolor] of patch-here = 36.8 [
+    set agitation agitation + 1
   ]
-  set energy energy - 1
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -222,8 +303,8 @@ GRAPHICS-WINDOW
 186
 -271
 271
-1
-1
+0
+0
 1
 days
 40.0
@@ -246,15 +327,15 @@ NIL
 1
 
 SLIDER
-83
-123
-255
-156
+81
+174
+253
+207
 number-of-bears
 number-of-bears
 0
 300
-185.0
+283.0
 1
 1
 NIL
@@ -278,15 +359,15 @@ NIL
 1
 
 SLIDER
-83
-167
-255
-200
+81
+218
+253
+251
 available-food
 available-food
 0
-1200
-1200.0
+8000
+4095.0
 1
 1
 NIL
@@ -329,10 +410,10 @@ count turtles with [pregnant = 1]
 11
 
 SLIDER
-82
-233
-254
-266
+80
+284
+252
+317
 hunting-permits
 hunting-permits
 0
@@ -344,10 +425,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-86
-282
-249
-315
+84
+333
+247
+366
 restrictive-hunting?
 restrictive-hunting?
 0
@@ -364,6 +445,75 @@ hunted-bears
 17
 1
 11
+
+PLOT
+783
+404
+945
+541
+food over time
+ticks
+food count
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count(patches with [pcolor = orange])"
+
+SLIDER
+81
+121
+253
+154
+regrowth-rate
+regrowth-rate
+1
+100
+32.0
+1
+1
+NIL
+HORIZONTAL
+
+PLOT
+1025
+216
+1185
+336
+% of angry bears
+NIL
+NIL
+0.0
+10.0
+0.0
+1.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot (count bears with [agitation > 0]) / (count bears)"
+
+PLOT
+951
+404
+1121
+541
+avg traveled distance per day
+days
+km
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [traveled-today] of bears"
 
 @#$#@#$#@
 ## WHAT IS IT?
