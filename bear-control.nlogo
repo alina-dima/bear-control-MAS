@@ -1,32 +1,70 @@
-extensions [ time ]
+;36.8 village color
+extensions [ time rnd ]
 
 breed [ bears bear ]
+breed [ hunters hunter ]
 
-turtles-own [ kcal age sex agitation traveled-today]
-;36.8 village color
+bears-own [
+  kcal
+  age
+  sex
+  agitation
+  traveled-today
+  pregnant
+  pregnancy-duration
+  time-since-cub-birth
+]
+
+hunters-own [
+  hunt-day
+  hunted
+]
 
 globals [
+  first-day
   date
   gained-kcal ;gained kcal per food
   lost-kcal ; lost kcal due to metabolism
   traveled-distance ;distance/quarter
   travel-kcal-lost ;kcal lost per km
   hunger-threshold ; if the bear has less, it might enter a human settlement
+  season
+  sexual-maturity-age
+  hunted-bears
 ]
 
 to setup
   clear-all
-  set date time:create "2018/01/01"
   import-pcolors "map.png"
+
+  set first-day time:create "2019/01/01"
+  set date first-day
+  set sexual-maturity-age ( 5.5 * 365 )
+  set hunted-bears 0
 
   create-bears number-of-bears [
     move-to one-of patches with [ pcolor = 56.4 ]
-    set color brown
     set size 15
     set shape "bear"
     set kcal random 20000
-    set age random 30
-    set sex one-of ["male" "female"]
+    set age random 30 * 365
+    set sex one-of [ "male" "female" ]
+    ifelse ( sex = "female" )
+      [ set color pink ]
+      [ set color blue ]
+    set pregnant 0
+    ifelse ( age >= sexual-maturity-age )
+      [ set time-since-cub-birth random ( 365 * 3 ) ] ;; not all females will mate immediately
+      [ set time-since-cub-birth ( 365 * 3 ) ] ;; so when cubs reach maturity, they can immediately get pregnant
+  ]
+
+  create-hunters hunting-permits [
+    set size 20
+    set color red
+    set shape "person"
+    set hunt-day random 365
+    set hunted 0
+    hide-turtle
   ]
 
   set gained-kcal 2000
@@ -40,10 +78,20 @@ end
 to go
   print-date
   regrow-food
-  if not any? turtles [ stop ]
-  check-kcal
-  check-age
-  move-turtles
+  if not any? bears [ stop ]
+  ask bears [
+    check-kcal
+    check-age
+    set-season
+    if season = "mating" [
+      mate
+    ]
+    birth-cubs
+    update-time-since-cub-birth
+    move-turtles
+  ]
+  ask hunters with [ hunted = 1 ] [ die ]
+  hunt
   set date time:plus date 1 "days"
 
   tick
@@ -55,15 +103,97 @@ to print-date
   output-print time:show date "MMMM d, yyyy"
 end
 
+to set-season
+  let month time:get "month" date
+  ifelse (month >= 5 and month < 8)
+    [ set season "mating" ]
+    [ set season "normal" ]
+end
+
 to check-kcal
-  ask turtles [
+  ask bears [
     if kcal <= 0 [ die ]
   ]
 end
 
+;; Bears die at 30
 to check-age
-  ask turtles [
-    if age = 365 * 30 [ die ]
+  if age = 365 * 30 [ die ]
+end
+
+;; Updated time since a female bear last gave birth to cubs
+to update-time-since-cub-birth
+  ask bears with [ (sex = "female" ) and ( age >= sexual-maturity-age ) and ( pregnant = 0 ) ] [
+    set time-since-cub-birth time-since-cub-birth + 1
+  ]
+end
+
+
+;; Produces offspring from a pregnant female bear if to 'term' and
+;; tracks pregnancy duration.
+to birth-cubs
+  ask bears with [ pregnant = 1 ] [
+    ifelse pregnancy-duration = 194 [
+      reproduce
+      set pregnant 0
+      set pregnancy-duration 0
+      set time-since-cub-birth 0
+    ][
+      set pregnancy-duration pregnancy-duration + 1
+    ]
+
+  ]
+end
+
+;; Produces a number of cubs based on weighted list
+to reproduce
+  let pairs [ [ 1 0.2 ] [ 2 0.3 ] [ 3 0.3 ] [ 4 0.2 ] ]
+    hatch first rnd:weighted-one-of-list pairs [ [p] -> last p ] [
+    set age 1
+    set pregnant 0
+    set pregnancy-duration 0
+    set sex one-of [ "male" "female" ]
+  ]
+end
+
+;; Non-pregnant female bears that reached maturity mate if
+;; mature bears are close by
+to mate
+  ask bears with [ ( ( sex  = "female" ) and ( age >= sexual-maturity-age ) and ( pregnant != 1 ) and ( time-since-cub-birth >= ( 365 * 2.5 ) ) ) ] [
+    let my-neighbours (other bears) in-radius 1
+    if any? my-neighbours with [ ( ( sex  = "male" ) and ( age >= sexual-maturity-age ) ) ] [
+      set pregnant 1
+    ]
+  ]
+end
+
+to hunt
+  ifelse restrictive-hunting? [
+    if any? hunters with [ hunt-day = ticks ] [
+      ifelse any? bears with [ age > 2 * 365 ] [
+        ask one-of hunters with [ hunt-day = ticks ] [
+          show-turtle
+          move-to one-of bears with [ age > 2 * 365]
+          ask one-of bears-here with [ age > 2 * 365]  [ die ]
+          set hunted-bears hunted-bears + 1
+          set hunted 1
+        ]
+      ][
+        ask hunters with [ hunt-day = ticks ] [
+          set hunt-day ticks + 1 + random ( 365 - ticks - 1)
+        ]
+      ]
+    ]
+  ][
+    if any? hunters with [ hunt-day = ticks ] and any? bears [
+      ask one-of hunters with [ hunt-day = ticks ] [
+        show-turtle
+        move-to one-of bears
+        ask one-of bears-here [ die ]
+        set hunted-bears hunted-bears + 1
+        set hunted 1
+      ]
+    ]
   ]
 end
 
@@ -109,11 +239,11 @@ end
 
 to move-turtles
   let quarter 0
-  ask turtles [
+  ask bears [
     set traveled-today 0
   ]
   while [quarter < 3] [
-    ask turtles [
+    ask bears [
       let new-patch patch-here
       ifelse any? patches in-radius traveled-distance with [ pcolor = orange ] [
         set new-patch one-of patches in-radius traveled-distance with [ pcolor = orange ]
@@ -150,13 +280,17 @@ to eat-food
   if [pcolor] of patch-here = 36.8 [
     set agitation agitation + 1
   ]
+  if any? patches in-radius 43 with [ pcolor = orange ] [
+    move-to one-of patches in-radius 43 with [ pcolor = orange ]
+  ]
+  set energy energy - 1
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-355
-15
-736
-567
+350
+10
+731
+562
 -1
 -1
 1.0
@@ -180,10 +314,10 @@ days
 40.0
 
 BUTTON
-79
-102
-142
-135
+91
+58
+154
+91
 NIL
 setup
 NIL
@@ -197,10 +331,10 @@ NIL
 1
 
 SLIDER
-70
-147
-242
-180
+83
+123
+255
+156
 number-of-bears
 number-of-bears
 0
@@ -212,10 +346,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-167
-102
-230
-135
+179
+58
+242
+91
 NIL
 go
 T
@@ -229,10 +363,10 @@ NIL
 1
 
 SLIDER
-70
-191
-242
-224
+83
+167
+255
+200
 available-food
 available-food
 0
@@ -244,10 +378,10 @@ NIL
 HORIZONTAL
 
 PLOT
-10
-234
-170
-354
+781
+105
+981
+255
 Bear population over time
 Ticks
 Bear Count
@@ -262,10 +396,58 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count turtles"
 
 OUTPUT
-23
-10
-178
-56
+797
+31
+952
+77
+11
+
+MONITOR
+773
+269
+989
+314
+Number of pregnant bears
+count turtles with [pregnant = 1]
+17
+1
+11
+
+SLIDER
+82
+233
+254
+266
+hunting-permits
+hunting-permits
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SWITCH
+86
+282
+249
+315
+restrictive-hunting?
+restrictive-hunting?
+0
+1
+-1000
+
+MONITOR
+809
+327
+957
+372
+Number of hunted bears
+hunted-bears
+17
+1
 11
 
 PLOT
@@ -392,9 +574,9 @@ Polygon -7500403 true true 150 0 0 150 105 150 105 293 195 293 195 150 300 150
 bear
 true
 0
-Circle -6459832 true false 30 60 240
-Circle -6459832 true false 30 30 90
-Circle -6459832 true false 180 30 90
+Circle -7500403 true true 30 60 240
+Circle -7500403 true true 30 30 90
+Circle -7500403 true true 180 30 90
 Circle -16777216 true false 90 120 30
 Circle -16777216 true false 180 120 30
 Polygon -16777216 true false 120 180
