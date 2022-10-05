@@ -183,7 +183,7 @@ to hunt
       ifelse any? bears with [ age > 2 * 365 and agitation > 5] [
         ask one-of hunters with [ hunt-day = ticks ] [
           show-turtle
-          move-to one-of bears with [ age > 2 * 365]
+          move-to one-of bears with [ age > 2 * 365 and agitation > 5]
           ask one-of bears-here with [ age > 2 * 365]  [ die ]
           set hunted-bears hunted-bears + 1
           set hunted 1
@@ -352,7 +352,7 @@ available-food
 available-food
 0
 8000
-3000.0
+3300.0
 1
 1
 NIL
