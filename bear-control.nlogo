@@ -187,6 +187,7 @@ to reproduce
     set pregnant 0
     set pregnancy-duration 0
     set sex one-of [ "male" "female" ]
+    if sex = "male" [ set color blue ]
   ]
 end
 
@@ -495,7 +496,7 @@ regrowth-rate
 regrowth-rate
 1
 100
-50.0
+25.0
 1
 1
 NIL
@@ -576,7 +577,7 @@ SWITCH
 354
 hunt-aggressive-bears
 hunt-aggressive-bears
-1
+0
 1
 -1000
 
