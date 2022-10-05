@@ -36,6 +36,7 @@ globals [
   calm-down-period
 ]
 
+
 to setup
   clear-all
   import-pcolors "map.png"
@@ -62,18 +63,6 @@ to setup
       [ set time-since-cub-birth ( 365 * 3 ) ] ;; so when cubs reach maturity, they can immediately get pregnant
   ]
 
-  if ( liberal-hunting = "non-restrictive" or liberal-hunting = "liberal, but no cubs" ) [
-    create-hunters liberal-hunting-permits [
-      set size 30
-      set color yellow
-      set shape "person"
-      set hunt-day random 365
-      set hunted 0
-      set hunts-aggressive false
-      hide-turtle
-    ]
-  ]
-
   set gained-kcal 3000
   set lost-kcal 3000
   set traveled-distance 14
@@ -83,9 +72,10 @@ to setup
   reset-ticks
 end
 
+
 to go
   print-date
-  if time:get "year" date = 2020 [ stop ]
+  if time:get "month" date = 1 and time:get "day" date = 1 [ issue-hunting-permits ]
   regrow-food
   if not any? bears [ stop ]
   ask bears [
@@ -112,11 +102,28 @@ to go
   tick
 end
 
+
 to print-date
   clear-output
   output-print "Current date:"
   output-print time:show date "MMMM d, yyyy"
 end
+
+
+to issue-hunting-permits
+  if ( liberal-hunting = "non-restrictive" or liberal-hunting = "liberal, but no cubs" ) [
+    create-hunters liberal-hunting-permits [
+      set size 30
+      set color yellow
+      set shape "person"
+      set hunt-day random 365
+      set hunted 0
+      set hunts-aggressive false
+      hide-turtle
+    ]
+  ]
+end
+
 
 to set-season
   let month time:get "month" date
@@ -125,15 +132,18 @@ to set-season
     [ set season "normal" ]
 end
 
+
 to check-kcal
   if kcal <= 0 [ die ]
   set kcal kcal - lost-kcal
 end
 
+
 ;; Bears die at 30
 to check-age
   if age = 365 * 30 [ die ]
 end
+
 
 to calm-down-bears
   if ticks mod calm-down-period = 0 [
@@ -142,6 +152,7 @@ to calm-down-bears
     ]
   ]
 end
+
 
 ;; Updated time since a female bear last gave birth to cubs
 to update-time-since-cub-birth
@@ -167,6 +178,7 @@ to birth-cubs
   ]
 end
 
+
 ;; Produces a number of cubs based on weighted list
 to reproduce
   let pairs [ [ 1 0.2 ] [ 2 0.3 ] [ 3 0.3 ] [ 4 0.2 ] ]
@@ -178,6 +190,7 @@ to reproduce
   ]
 end
 
+
 ;; Non-pregnant female bears that reached maturity mate if
 ;; mature bears are close by
 to mate
@@ -188,6 +201,7 @@ to mate
     ]
   ]
 end
+
 
 to hunt
   if liberal-hunting = "liberal, but no cubs" [
@@ -284,6 +298,7 @@ to move-turtles
   ]
 end
 
+
 to eat-food
   if [pcolor] of patch-here != 56.4 [
     set kcal kcal + gained-kcal
@@ -351,7 +366,7 @@ number-of-bears
 number-of-bears
 0
 300
-288.0
+283.0
 1
 1
 NIL
@@ -434,7 +449,7 @@ liberal-hunting-permits
 liberal-hunting-permits
 0
 100
-50.0
+39.0
 1
 1
 NIL
@@ -550,7 +565,7 @@ CHOOSER
 liberal-hunting
 liberal-hunting
 "none" "liberal, but no cubs" "non-restrictive"
-0
+1
 
 SWITCH
 70
