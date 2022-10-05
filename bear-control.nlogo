@@ -75,6 +75,7 @@ end
 
 to go
   print-date
+  if time:get "year" date = 2024 [ stop ]
   if time:get "month" date = 1 and time:get "day" date = 1 [ issue-hunting-permits ]
   regrow-food
   if not any? bears [ stop ]
@@ -400,7 +401,7 @@ available-food
 available-food
 0
 8000
-4178.0
+3057.0
 1
 1
 NIL
@@ -576,7 +577,7 @@ SWITCH
 354
 hunt-aggressive-bears
 hunt-aggressive-bears
-1
+0
 1
 -1000
 
@@ -964,6 +965,32 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>count bears</metric>
+    <enumeratedValueSet variable="available-food">
+      <value value="3057"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="hunt-aggressive-bears">
+      <value value="true"/>
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="regrowth-rate">
+      <value value="25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="liberal-hunting-permits">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="number-of-bears">
+      <value value="283"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="liberal-hunting">
+      <value value="&quot;none&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
