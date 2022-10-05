@@ -16,8 +16,9 @@ bears-own [
 ]
 
 hunters-own [
-  hunt-day
-  hunted
+  hunt-day ; day in which the hunter will hunt
+  hunted ; marks if the hunting permit has been used
+  hunts-aggressive ; emergency hunting refers to hunting aggressive bears
 ]
 
 globals [
@@ -30,7 +31,8 @@ globals [
   hunger-threshold ; if the bear has less, it might enter a human settlement
   season
   sexual-maturity-age
-  hunted-bears
+  liberally-hunted-bears
+  hunted-aggressive-bears
   calm-down-period
 ]
 
@@ -41,7 +43,8 @@ to setup
   set first-day time:create "2019/01/01"
   set date first-day
   set sexual-maturity-age ( 5.5 * 365 )
-  set hunted-bears 0
+  set liberally-hunted-bears 0
+  set hunted-aggressive-bears 0
 
   create-bears number-of-bears [
     move-to one-of patches with [ pcolor = 56.4 ]
@@ -59,13 +62,16 @@ to setup
       [ set time-since-cub-birth ( 365 * 3 ) ] ;; so when cubs reach maturity, they can immediately get pregnant
   ]
 
-  create-hunters hunting-permits [
-    set size 20
-    set color red
-    set shape "person"
-    set hunt-day random 365
-    set hunted 0
-    hide-turtle
+  if ( liberal-hunting = "non-restrictive" or liberal-hunting = "liberal, but no cubs" ) [
+    create-hunters liberal-hunting-permits [
+      set size 30
+      set color yellow
+      set shape "person"
+      set hunt-day random 365
+      set hunted 0
+      set hunts-aggressive false
+      hide-turtle
+    ]
   ]
 
   set gained-kcal 3000
@@ -79,6 +85,7 @@ end
 
 to go
   print-date
+  if time:get "year" date = 2020 [ stop ]
   regrow-food
   if not any? bears [ stop ]
   ask bears [
@@ -91,12 +98,17 @@ to go
   ]
   birth-cubs
   update-time-since-cub-birth
-  move-turtles
-  ask hunters with [ hunted = 1 ] [ die ]
-  hunt
-  calm-down-bears
-  set date time:plus date 1 "days"
 
+  if ( hunt-aggressive-bears and any? bears with [ agitation > 5 ] ) [
+    hunt-aggressive
+  ]
+  hunt
+
+  move-turtles
+  calm-down-bears
+
+  ask hunters with [ hunted = 1 ] [ die ]
+  set date time:plus date 1 "days"
   tick
 end
 
@@ -178,14 +190,14 @@ to mate
 end
 
 to hunt
-  ifelse restrictive-hunting? [
-    if any? hunters with [ hunt-day = ticks ] [
-      ifelse any? bears with [ age > 2 * 365 and agitation > 5] [
+  if liberal-hunting = "liberal, but no cubs" [
+    if any? hunters with [ hunt-day = ticks and hunts-aggressive = false ] [
+      ifelse any? bears with [ age > 2 * 365 ] [
         ask one-of hunters with [ hunt-day = ticks ] [
           show-turtle
-          move-to one-of bears with [ age > 2 * 365 and agitation > 5]
-          ask one-of bears-here with [ age > 2 * 365]  [ die ]
-          set hunted-bears hunted-bears + 1
+          move-to one-of bears with [ age > 2 * 365 ]
+          ask one-of bears-here with [ age > 2 * 365 ]  [ die ]
+          set liberally-hunted-bears liberally-hunted-bears + 1
           set hunted 1
         ]
       ][
@@ -194,16 +206,36 @@ to hunt
         ]
       ]
     ]
-  ][
-    if any? hunters with [ hunt-day = ticks ] and any? bears [
+  ]
+
+  if liberal-hunting = "non-restrictive" [
+    if any? hunters with [ hunt-day = ticks and hunts-aggressive = false ] and any? bears [
       ask one-of hunters with [ hunt-day = ticks ] [
         show-turtle
         move-to one-of bears
         ask one-of bears-here [ die ]
-        set hunted-bears hunted-bears + 1
+        set liberally-hunted-bears liberally-hunted-bears + 1
         set hunted 1
       ]
     ]
+  ]
+end
+
+
+to hunt-aggressive
+  create-hunters count bears with [ agitation > 5 ] [
+    set size 30
+    set color red
+    set shape "person"
+    set hunts-aggressive true
+    set hunted 0
+  ]
+  ask hunters with [ hunts-aggressive = true ] [
+    show-turtle
+    move-to one-of bears with [ agitation > 5 ]
+    ask one-of bears-here with [ agitation > 5 ]  [ die ]
+    set hunted-aggressive-bears hunted-aggressive-bears + 1
+    set hunted 1
   ]
 end
 
@@ -249,7 +281,6 @@ to move-turtles
       eat-food
     ]
     set quarter quarter + 1
-    show quarter
   ]
 end
 
@@ -295,10 +326,10 @@ days
 40.0
 
 BUTTON
-91
-58
-154
-91
+87
+98
+150
+131
 NIL
 setup
 NIL
@@ -312,10 +343,10 @@ NIL
 1
 
 SLIDER
-81
-174
-253
-207
+80
+150
+252
+183
 number-of-bears
 number-of-bears
 0
@@ -327,10 +358,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-179
-58
-242
-91
+175
+98
+238
+131
 NIL
 go
 T
@@ -344,10 +375,10 @@ NIL
 1
 
 SLIDER
-81
-218
-253
+79
+216
 251
+249
 available-food
 available-food
 0
@@ -359,10 +390,10 @@ NIL
 HORIZONTAL
 
 PLOT
-781
-105
-981
-255
+776
+28
+976
+178
 Bear population over time
 Ticks
 Bear Count
@@ -377,17 +408,17 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count turtles"
 
 OUTPUT
-797
-31
-952
-77
+92
+29
+247
+75
 11
 
 MONITOR
-773
-269
-989
-314
+768
+192
+984
+237
 Number of pregnant bears
 count bears with [pregnant = 1]
 17
@@ -395,12 +426,12 @@ count bears with [pregnant = 1]
 11
 
 SLIDER
-80
-284
-252
-317
-hunting-permits
-hunting-permits
+75
+412
+248
+445
+liberal-hunting-permits
+liberal-hunting-permits
 0
 100
 50.0
@@ -409,24 +440,13 @@ hunting-permits
 NIL
 HORIZONTAL
 
-SWITCH
-84
-333
-247
-366
-restrictive-hunting?
-restrictive-hunting?
-0
-1
--1000
-
 MONITOR
-809
-327
-957
-372
-Number of hunted bears
-hunted-bears
+802
+253
+950
+298
+Liberally hunted bears
+liberally-hunted-bears
 17
 1
 11
@@ -450,10 +470,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count(patches with [pcolor = orange])"
 
 SLIDER
-81
-121
-253
-154
+80
+256
+252
+289
 regrowth-rate
 regrowth-rate
 1
@@ -465,10 +485,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1025
-216
-1185
-336
+1028
+139
+1188
+259
 % of angry bears
 NIL
 NIL
@@ -501,10 +521,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [traveled-today] of bears / 7.3"
 
 MONITOR
-1023
-163
-1163
-208
+1026
+86
+1166
+131
 number of angry bears
 count bears with [agitation > 0]
 2
@@ -512,12 +532,55 @@ count bears with [agitation > 0]
 11
 
 MONITOR
-1021
-108
-1210
-153
+1024
+31
+1213
+76
 number of very angry bears
 count bears with [agitation > 5]
+17
+1
+11
+
+CHOOSER
+83
+360
+237
+405
+liberal-hunting
+liberal-hunting
+"none" "liberal, but no cubs" "non-restrictive"
+0
+
+SWITCH
+70
+321
+251
+354
+hunt-aggressive-bears
+hunt-aggressive-bears
+0
+1
+-1000
+
+MONITOR
+802
+307
+953
+352
+Hunted aggressive bears
+hunted-aggressive-bears
+17
+1
+11
+
+MONITOR
+1006
+315
+1096
+360
+NIL
+count hunters
 17
 1
 11
@@ -880,7 +943,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
