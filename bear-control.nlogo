@@ -31,6 +31,7 @@ globals [
   season
   sexual-maturity-age
   hunted-bears
+  calm-down-period
 ]
 
 to setup
@@ -46,7 +47,7 @@ to setup
     move-to one-of patches with [ pcolor = 56.4 ]
     set size 15
     set shape "bear"
-    set kcal random 20000
+    set kcal 20000 + random 10000
     set age random 30 * 365
     set sex one-of [ "male" "female" ]
     ifelse ( sex = "female" )
@@ -67,10 +68,11 @@ to setup
     hide-turtle
   ]
 
-  set gained-kcal 2000
-  set lost-kcal 10000
-  set traveled-distance 14 ;is 43 1 km?
+  set gained-kcal 3000
+  set lost-kcal 3000
+  set traveled-distance 14
   set travel-kcal-lost 100
+  set calm-down-period 28
   regrow-food
   reset-ticks
 end
@@ -92,6 +94,7 @@ to go
   move-turtles
   ask hunters with [ hunted = 1 ] [ die ]
   hunt
+  calm-down-bears
   set date time:plus date 1 "days"
 
   tick
@@ -112,11 +115,20 @@ end
 
 to check-kcal
   if kcal <= 0 [ die ]
+  set kcal kcal - lost-kcal
 end
 
 ;; Bears die at 30
 to check-age
   if age = 365 * 30 [ die ]
+end
+
+to calm-down-bears
+  if ticks mod calm-down-period = 0 [
+    ask bears with [agitation > 0] [
+      set agitation agitation - 1
+    ]
+  ]
 end
 
 ;; Updated time since a female bear last gave birth to cubs
@@ -168,7 +180,7 @@ end
 to hunt
   ifelse restrictive-hunting? [
     if any? hunters with [ hunt-day = ticks ] [
-      ifelse any? bears with [ age > 2 * 365 ] [
+      ifelse any? bears with [ age > 2 * 365 and agitation > 5] [
         ask one-of hunters with [ hunt-day = ticks ] [
           show-turtle
           move-to one-of bears with [ age > 2 * 365]
@@ -209,32 +221,6 @@ to regrow-food
 end
 
 
-
-;to move-turtles
-;  let quarter 0
-;  while [quarter < 3] [
-;    ask turtles [
-;     ifelse any? patches in-radius traveled-distance with [ pcolor = orange ] [
-;      move-to one-of patches in-radius traveled-distance with [ pcolor = orange ]
-;        set kcal kcal - travel-kcal-lost
-;        eat-food
-;
-;      ] [
-;        ifelse kcal < hunger-threshold and any? patches in-radius traveled-distance with [pcolor = 36.8] [
-;          ; move to human turf
-;          move-to one-of patches in-radius traveled-distance with [pcolor = 36.8]
-;          eat-food
-;        ] [
-;          let dist random-normal 43 10
-;          move-to one-of patches in-radius dist with [pcolor = 56.4]
-;          set kcal kcal - travel-kcal-lost * dist / traveled-distance
-;        ]
-;      ]
-;    ]
-;    set quarter quarter + 1
-;  ]
-;end
-
 to move-turtles
   let quarter 0
   ask bears [
@@ -246,11 +232,11 @@ to move-turtles
       ifelse any? patches in-radius traveled-distance with [ pcolor = orange ] [
         set new-patch one-of patches in-radius traveled-distance with [ pcolor = orange ]
       ] [
-        ifelse kcal < hunger-threshold and any? patches in-radius traveled-distance with [pcolor = 36.8] [
+        ifelse any? patches in-radius traveled-distance with [pcolor = 36.8] [
           ; move to human turf
           set new-patch one-of patches in-radius traveled-distance with [pcolor = 36.8]
         ] [
-          let dist random-normal 70 20
+          let dist random-normal 40 10
           if dist < 0 [set dist 0]
           set new-patch one-of patches in-radius dist with [pcolor = 56.4]
         ]
@@ -334,7 +320,7 @@ number-of-bears
 number-of-bears
 0
 300
-283.0
+288.0
 1
 1
 NIL
@@ -366,7 +352,7 @@ available-food
 available-food
 0
 8000
-5554.0
+3000.0
 1
 1
 NIL
@@ -472,7 +458,7 @@ regrowth-rate
 regrowth-rate
 1
 100
-32.0
+50.0
 1
 1
 NIL
@@ -513,6 +499,28 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot mean [traveled-today] of bears / 7.3"
+
+MONITOR
+1023
+163
+1163
+208
+number of angry bears
+count bears with [agitation > 0]
+2
+1
+11
+
+MONITOR
+1021
+108
+1210
+153
+number of very angry bears
+count bears with [agitation > 5]
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -872,7 +880,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.2
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
