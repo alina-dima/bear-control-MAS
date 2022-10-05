@@ -196,8 +196,7 @@ end
 ;; mature bears are close by
 to mate
   ask bears with [ ( ( sex  = "female" ) and ( age >= sexual-maturity-age ) and ( pregnant != 1 ) and ( time-since-cub-birth >= ( 365 * 2.5 ) ) ) ] [
-    let my-neighbours (other bears) in-radius 1
-    if any? my-neighbours with [ ( ( sex  = "male" ) and ( age >= sexual-maturity-age ) ) ] [
+    if any? bears-here with [ ( ( sex  = "male" ) and ( age >= sexual-maturity-age ) ) ] [
       set pregnant 1
     ]
   ]
@@ -401,7 +400,7 @@ available-food
 available-food
 0
 8000
-5096.0
+4178.0
 1
 1
 NIL
@@ -452,7 +451,7 @@ liberal-hunting-permits
 liberal-hunting-permits
 0
 100
-39.0
+0.0
 1
 1
 NIL
@@ -577,7 +576,7 @@ SWITCH
 354
 hunt-aggressive-bears
 hunt-aggressive-bears
-0
+1
 1
 -1000
 
