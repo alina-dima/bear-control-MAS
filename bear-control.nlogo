@@ -300,12 +300,14 @@ end
 
 
 to eat-food
-  if [pcolor] of patch-here != 56.4 [
-    set kcal kcal + gained-kcal
-  ]
-  if [pcolor] of patch-here = orange [
-    ask patch-here [
-      set pcolor 56.4
+  if kcal < 15000 [
+    if [pcolor] of patch-here != 56.4 [
+      set kcal kcal + gained-kcal
+    ]
+    if [pcolor] of patch-here = orange [
+      ask patch-here [
+        set pcolor 56.4
+      ]
     ]
   ]
   if [pcolor] of patch-here = 36.8 [
@@ -398,7 +400,7 @@ available-food
 available-food
 0
 8000
-3300.0
+5096.0
 1
 1
 NIL
@@ -565,7 +567,7 @@ CHOOSER
 liberal-hunting
 liberal-hunting
 "none" "liberal, but no cubs" "non-restrictive"
-1
+0
 
 SWITCH
 70
@@ -574,7 +576,7 @@ SWITCH
 354
 hunt-aggressive-bears
 hunt-aggressive-bears
-0
+1
 1
 -1000
 
