@@ -34,6 +34,7 @@ globals [
   liberally-hunted-bears
   hunted-aggressive-bears
   calm-down-period
+  starved-bears
 ]
 
 
@@ -68,6 +69,7 @@ to setup
   set traveled-distance 14
   set travel-kcal-lost 100
   set calm-down-period 28
+  set starved-bears 0
   regrow-food
   reset-ticks
 end
@@ -138,7 +140,10 @@ end
 
 
 to check-kcal
-  if kcal <= 0 [ die ]
+  if kcal <= 0 [
+    die
+    set starved-bears starved-bears + 1
+  ]
   set kcal kcal - lost-kcal
 end
 
@@ -456,7 +461,7 @@ liberal-hunting-permits
 liberal-hunting-permits
 0
 100
-0.0
+50.0
 1
 1
 NIL
@@ -581,7 +586,7 @@ SWITCH
 354
 hunt-aggressive-bears
 hunt-aggressive-bears
-0
+1
 1
 -1000
 
@@ -965,7 +970,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.2
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
