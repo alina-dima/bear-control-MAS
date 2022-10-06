@@ -199,7 +199,7 @@ end
 ;; Non-pregnant female bears that reached maturity mate if
 ;; mature bears are close by
 to mate
-  ask bears with [ ( ( sex  = "female" ) and ( age >= sexual-maturity-age ) and ( pregnant != 1 ) and ( time-since-cub-birth >= ( 365 * 2.5 ) ) ) ] [
+  ask bears with [ ( ( sex  = "female" ) and ( age >= sexual-maturity-age ) and ( pregnant != 1 ) and ( time-since-cub-birth >= ( 365 * 2.85 ) ) ) ] [
     if any? bears-here with [ ( ( sex  = "male" ) and ( age >= sexual-maturity-age ) ) ] [
       set pregnant 1
     ]
