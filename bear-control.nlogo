@@ -76,7 +76,10 @@ end
 to go
   print-date
   if time:get "year" date = 2024 [ stop ]
-  if time:get "month" date = 1 and time:get "day" date = 1 [ issue-hunting-permits ]
+  if time:get "month" date = 1 and time:get "day" date = 1 [
+    issue-hunting-permits
+    set first-day date
+  ]
   regrow-food
   if not any? bears [ stop ]
   ask bears [
@@ -205,10 +208,11 @@ end
 
 
 to hunt
+  let day-of-year time:difference-between first-day date "days" + 1
   if liberal-hunting = "liberal, but no cubs" [
-    if any? hunters with [ hunt-day = ticks and hunts-aggressive = false ] [
+    if any? hunters with [ hunt-day = day-of-year and hunts-aggressive = false ] [
       ifelse any? bears with [ age > 2 * 365 ] [
-        ask one-of hunters with [ hunt-day = ticks ] [
+        ask one-of hunters with [ hunt-day = day-of-year ] [
           show-turtle
           move-to one-of bears with [ age > 2 * 365 ]
           ask one-of bears-here with [ age > 2 * 365 ]  [ die ]
@@ -216,16 +220,16 @@ to hunt
           set hunted 1
         ]
       ][
-        ask hunters with [ hunt-day = ticks ] [
-          set hunt-day ticks + 1 + random ( 365 - ticks - 1)
+        ask hunters with [ hunt-day = day-of-year ] [
+          set hunt-day day-of-year + 1 + random ( 365 - day-of-year - 1)
         ]
       ]
     ]
   ]
 
   if liberal-hunting = "non-restrictive" [
-    if any? hunters with [ hunt-day = ticks and hunts-aggressive = false ] and any? bears [
-      ask one-of hunters with [ hunt-day = ticks ] [
+    if any? hunters with [ hunt-day = day-of-year and hunts-aggressive = false ] and any? bears [
+      ask one-of hunters with [ hunt-day = day-of-year ] [
         show-turtle
         move-to one-of bears
         ask one-of bears-here [ die ]
