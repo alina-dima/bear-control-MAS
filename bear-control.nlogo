@@ -95,10 +95,11 @@ to go
   birth-cubs
   update-time-since-cub-birth
 
+  ; aggressive bear hunting
   if ( hunt-aggressive-bears and any? bears with [ agitation > 5 ] ) [
     hunt-aggressive
   ]
-  hunt
+  hunt  ; liberal hunting
 
   move-turtles
   calm-down-bears
@@ -113,21 +114,6 @@ to print-date
   clear-output
   output-print "Current date:"
   output-print time:show date "MMMM d, yyyy"
-end
-
-
-to issue-hunting-permits
-  if ( liberal-hunting = "non-restrictive" or liberal-hunting = "liberal, but no cubs" ) [
-    create-hunters liberal-hunting-permits [
-      set size 30
-      set color yellow
-      set shape "person"
-      set hunt-day random 365
-      set hunted 0
-      set hunts-aggressive false
-      hide-turtle
-    ]
-  ]
 end
 
 
@@ -212,8 +198,29 @@ to mate
 end
 
 
+; If any type of liberal hunting is selected from the chooser, then this function creates
+; as many liberal-hunters as liberal-hunting-permits
+to issue-hunting-permits
+  if ( liberal-hunting = "non-restrictive" or liberal-hunting = "liberal, but no cubs" ) [
+    create-hunters liberal-hunting-permits [
+      set size 30
+      set color yellow
+      set shape "person"
+      set hunt-day random 365
+      set hunted 0
+      set hunts-aggressive false
+      hide-turtle
+    ]
+  ]
+end
+
+
+; Implements both types of liberal hunting
 to hunt
-  let day-of-year time:difference-between first-day date "days" + 1
+  let day-of-year time:difference-between first-day date "days" + 1   ; Current day of the year
+
+  ; In this case, no bears under 2 years old can be hunted.
+  ; If there are no such bears, then the hunter is assigned a new hunt-day.
   if liberal-hunting = "liberal, but no cubs" [
     if any? hunters with [ hunt-day = day-of-year and hunts-aggressive = false ] [
       ifelse any? bears with [ age > 2 * 365 ] [
@@ -232,6 +239,7 @@ to hunt
     ]
   ]
 
+  ; In this case, the hunter can hunt any bear.
   if liberal-hunting = "non-restrictive" [
     if any? hunters with [ hunt-day = day-of-year and hunts-aggressive = false ] and any? bears [
       ask one-of hunters with [ hunt-day = day-of-year ] [
@@ -246,6 +254,9 @@ to hunt
 end
 
 
+; Implements aggressive bear hunting.
+; If any bears have an agitation level of above 5, then a hunter is created and the aggressive
+; bear is hunted.
 to hunt-aggressive
   create-hunters count bears with [ agitation > 5 ] [
     set size 30
@@ -418,9 +429,9 @@ HORIZONTAL
 
 PLOT
 776
-28
+93
 976
-178
+243
 Bear population over time
 Ticks
 Bear Count
@@ -443,9 +454,9 @@ OUTPUT
 
 MONITOR
 768
-192
+257
 984
-237
+302
 Number of pregnant bears
 count bears with [pregnant = 1]
 17
@@ -468,10 +479,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-802
-253
-950
-298
+1044
+148
+1192
+193
 Liberally hunted bears
 liberally-hunted-bears
 17
@@ -479,10 +490,10 @@ liberally-hunted-bears
 11
 
 PLOT
-783
-404
-945
-541
+839
+345
+1001
+482
 food over time
 ticks
 food count
@@ -512,28 +523,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1028
-139
-1188
-259
-% of angry bears
-NIL
-NIL
-0.0
-10.0
-0.0
-1.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot (count bears with [agitation > 0]) / (count bears)"
-
-PLOT
-951
-404
-1121
-541
+1007
+345
+1177
+482
 avg traveled distance per day
 days
 km
@@ -548,22 +541,11 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [traveled-today] of bears / 7.3"
 
 MONITOR
-1026
-86
-1166
-131
-number of angry bears
-count bears with [agitation > 0]
-2
-1
-11
-
-MONITOR
 1024
-31
+96
 1213
-76
-number of very angry bears
+141
+Number of aggressive bears
 count bears with [agitation > 5]
 17
 1
@@ -591,10 +573,10 @@ hunt-aggressive-bears
 -1000
 
 MONITOR
-802
-307
-953
-352
+1044
+202
+1195
+247
 Hunted aggressive bears
 hunted-aggressive-bears
 17
@@ -602,10 +584,10 @@ hunted-aggressive-bears
 11
 
 MONITOR
-1006
-315
-1096
-360
+1073
+257
+1163
+302
 NIL
 count hunters
 17
@@ -970,7 +952,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
