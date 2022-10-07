@@ -7,11 +7,11 @@ breed [ hunters hunter ]
 bears-own [
   kcal
   age
-  sex
+  sex                   ; Gender
   agitation
   traveled-today
-  pregnant
-  pregnancy-duration
+  pregnant              ; 0 ir 1. Signifies if a bear is pregnant.
+  pregnancy-duration    ; Duration of pregnancy in days
   time-since-cub-birth
 ]
 
@@ -29,8 +29,8 @@ globals [
   traveled-distance ;distance/quarter
   travel-kcal-lost ;kcal lost per km
   hunger-threshold ; if the bear has less, it might enter a human settlement
-  season
-  sexual-maturity-age
+  season               ; If it is mating season or not
+  sexual-maturity-age  ; Age at which a bear can mate
   liberally-hunted-bears
   hunted-aggressive-bears
   calm-down-period
@@ -60,8 +60,8 @@ to setup
       [ set color blue ]
     set pregnant 0
     ifelse ( age >= sexual-maturity-age )
-      [ set time-since-cub-birth random ( 365 * 3 ) ] ;; not all females will mate immediately
-      [ set time-since-cub-birth ( 365 * 3 ) ] ;; so when cubs reach maturity, they can immediately get pregnant
+      [ set time-since-cub-birth random ( 365 * 3 ) ] ;; Not all females will mate immediately
+      [ set time-since-cub-birth ( 365 * 3 ) ] ;; When cubs reach maturity, they can immediately get pregnant
   ]
 
   set gained-kcal 3000
@@ -89,6 +89,7 @@ to go
     check-age
   ]
   set-season
+  ; Reproduction
   if season = "mating" [
     mate
   ]
@@ -117,6 +118,7 @@ to print-date
 end
 
 
+;; Mating season from May 1st until July 31st
 to set-season
   let month time:get "month" date
   ifelse (month >= 5 and month < 8)
@@ -149,7 +151,7 @@ to calm-down-bears
 end
 
 
-;; Updated time since a female bear last gave birth to cubs
+;; Updates time since a female bear last gave birth to cubs
 to update-time-since-cub-birth
   ask bears with [ (sex = "female" ) and ( age >= sexual-maturity-age ) and ( pregnant = 0 ) ] [
     set time-since-cub-birth time-since-cub-birth + 1
@@ -188,7 +190,7 @@ end
 
 
 ;; Non-pregnant female bears that reached maturity mate if
-;; mature bears are close by
+;; mature bears are on the same patch
 to mate
   ask bears with [ ( ( sex  = "female" ) and ( age >= sexual-maturity-age ) and ( pregnant != 1 ) and ( time-since-cub-birth >= ( 365 * 2.85 ) ) ) ] [
     if any? bears-here with [ ( ( sex  = "male" ) and ( age >= sexual-maturity-age ) ) ] [
