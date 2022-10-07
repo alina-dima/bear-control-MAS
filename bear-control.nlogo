@@ -126,7 +126,7 @@ to set-season
     [ set season "normal" ]
 end
 
-
+;; Bears die if they run out of stored calories
 to check-kcal
   if kcal <= 0 [
     die
@@ -141,7 +141,7 @@ to check-age
   if age = 365 * 30 [ die ]
 end
 
-
+;; Reduce the agitation based on the calm-down-period
 to calm-down-bears
   if ticks mod calm-down-period = 0 [
     ask bears with [agitation > 0] [
@@ -200,8 +200,8 @@ to mate
 end
 
 
-; If any type of liberal hunting is selected from the chooser, then this function creates
-; as many liberal-hunters as liberal-hunting-permits
+;; If any type of liberal hunting is selected from the chooser, then this function creates
+;; as many liberal-hunters as liberal-hunting-permits
 to issue-hunting-permits
   if ( liberal-hunting = "non-restrictive" or liberal-hunting = "liberal, but no cubs" ) [
     create-hunters liberal-hunting-permits [
@@ -217,12 +217,12 @@ to issue-hunting-permits
 end
 
 
-; Implements both types of liberal hunting
+;; Implements both types of liberal hunting
 to hunt
   let day-of-year time:difference-between first-day date "days" + 1   ; Current day of the year
 
-  ; In this case, no bears under 2 years old can be hunted.
-  ; If there are no such bears, then the hunter is assigned a new hunt-day.
+  ;; In this case, no bears under 2 years old can be hunted.
+  ;; If there are no such bears, then the hunter is assigned a new hunt-day.
   if liberal-hunting = "liberal, but no cubs" [
     if any? hunters with [ hunt-day = day-of-year and hunts-aggressive = false ] [
       ifelse any? bears with [ age > 2 * 365 ] [
@@ -241,7 +241,7 @@ to hunt
     ]
   ]
 
-  ; In this case, the hunter can hunt any bear.
+  ;; In this case, the hunter can hunt any bear.
   if liberal-hunting = "non-restrictive" [
     if any? hunters with [ hunt-day = day-of-year and hunts-aggressive = false ] and any? bears [
       ask one-of hunters with [ hunt-day = day-of-year ] [
@@ -256,9 +256,9 @@ to hunt
 end
 
 
-; Implements aggressive bear hunting.
-; If any bears have an agitation level of above 5, then a hunter is created and the aggressive
-; bear is hunted.
+;; Implements aggressive bear hunting.
+;; If any bears have an agitation level of above 5, then a hunter is created and the aggressive
+;; bear is hunted.
 to hunt-aggressive
   create-hunters count bears with [ agitation > 5 ] [
     set size 30
@@ -276,7 +276,7 @@ to hunt-aggressive
   ]
 end
 
-
+;; Regrow food in one of the patches based on the regrowth rate
 to regrow-food
   let needed-food 0
   let current-food count(patches with [pcolor = orange])
@@ -289,7 +289,7 @@ to regrow-food
   ]
 end
 
-
+;; Move the bears to a different location on the map
 to move-turtles
   let quarter 0
   ask bears [
@@ -298,13 +298,13 @@ to move-turtles
   while [quarter < 3] [
     ask bears [
       let new-patch patch-here
-      ifelse any? patches in-radius traveled-distance with [ pcolor = orange ] [
+      ifelse any? patches in-radius traveled-distance with [ pcolor = orange ] [ ; try to find food in a range of 2 km in the forest
         set new-patch one-of patches in-radius traveled-distance with [ pcolor = orange ]
       ] [
-        ifelse any? patches in-radius traveled-distance with [pcolor = 36.8] [
+        ifelse any? patches in-radius traveled-distance with [pcolor = 36.8] [ ; try to find food in the urban areas
           ; move to human turf
           set new-patch one-of patches in-radius traveled-distance with [pcolor = 36.8]
-        ] [
+        ] [ ; if no food is available in the area, move to a random location
           let dist random-normal 40 10
           if dist < 0 [set dist 0]
           set new-patch one-of patches in-radius dist with [pcolor = 56.4]
@@ -321,7 +321,7 @@ to move-turtles
   ]
 end
 
-
+;; increase the number of stored calories in a bear
 to eat-food
   if kcal < 15000 [
     if [pcolor] of patch-here != 56.4 [
@@ -333,7 +333,7 @@ to eat-food
       ]
     ]
   ]
-  if [pcolor] of patch-here = 36.8 [
+  if [pcolor] of patch-here = 36.8 [ ; if the bear is in the urban area, increase agitation
     set agitation agitation + 1
   ]
 end
