@@ -328,13 +328,7 @@ to move-turtles
     ]
     ;; cubs stay with their mother
     ask bears with [mother != 0] [
-        show age / 365
-        let dist distance mother
-        set traveled-today traveled-today + dist
-        let journey-cost dist * travel-kcal-lost
-        set kcal kcal - journey-cost
         move-to mother
-      eat-food
       ]
     set quarter quarter + 1
   ]
