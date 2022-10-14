@@ -92,7 +92,9 @@ to go
   regrow-food
   if not any? bears [ stop ]
   ask bears [
-    check-kcal
+    if mother = 0 [
+      check-kcal
+    ]
     check-age
   ]
   set-season
@@ -328,8 +330,10 @@ to move-turtles
     ]
     ;; cubs stay with their mother
     ask bears with [mother != 0] [
-        move-to mother
-      ]
+      ifelse mother != nobody
+      [ move-to mother ]
+      [ set mother 0 ]
+    ]
     set quarter quarter + 1
   ]
 end
