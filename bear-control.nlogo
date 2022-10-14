@@ -13,6 +13,7 @@ bears-own [
   pregnant              ; 0 ir 1. Signifies if a bear is pregnant.
   pregnancy-duration    ; Duration of pregnancy in days
   time-since-cub-birth
+  mother
 ]
 
 hunters-own [
@@ -55,6 +56,7 @@ to setup
     set kcal 20000 + random 10000
     set age random 30 * 365
     set sex one-of [ "male" "female" ]
+    set mother 0
     ifelse ( sex = "female" )
       [ set color pink ]
       [ set color blue ]
@@ -62,6 +64,11 @@ to setup
     ifelse ( age >= sexual-maturity-age )
       [ set time-since-cub-birth random ( 365 * 3 ) ] ;; Not all females will mate immediately
       [ set time-since-cub-birth ( 365 * 3 ) ] ;; When cubs reach maturity, they can immediately get pregnant
+  ]
+  ;; initialising cubs to mothers at random, and have them be with the mother
+  ask bears with [age < 2.45 * 365 ] [
+    set mother one-of bears with [ sex = "female" ]
+    move-to mother
   ]
 
   set gained-kcal 3000
@@ -139,6 +146,7 @@ end
 ;; Bears die at 30
 to check-age
   if age = 365 * 30 [ die ]
+  if age >= 365 * 2.45 [set mother 0]
 end
 
 ;; Reduce the agitation based on the calm-down-period
@@ -184,6 +192,7 @@ to reproduce
     set pregnant 0
     set pregnancy-duration 0
     set sex one-of [ "male" "female" ]
+    set mother myself
     if sex = "male" [ set color blue ]
   ]
 end
@@ -296,7 +305,7 @@ to move-turtles
     set traveled-today 0
   ]
   while [quarter < 3] [
-    ask bears [
+    ask bears with [mother = 0][
       let new-patch patch-here
       ifelse any? patches in-radius traveled-distance with [ pcolor = orange ] [ ; try to find food in a range of 2 km in the forest
         set new-patch one-of patches in-radius traveled-distance with [ pcolor = orange ]
@@ -317,6 +326,16 @@ to move-turtles
       move-to new-patch
       eat-food
     ]
+    ;; cubs stay with their mother
+    ask bears with [mother != 0] [
+        show age / 365
+        let dist distance mother
+        set traveled-today traveled-today + dist
+        let journey-cost dist * travel-kcal-lost
+        set kcal kcal - journey-cost
+        move-to mother
+      eat-food
+      ]
     set quarter quarter + 1
   ]
 end
