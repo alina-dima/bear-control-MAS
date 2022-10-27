@@ -55,7 +55,7 @@ to setup
     set shape "bear"
     set kcal 20000 + random 10000
     set age random 30 * 365
-    set sex one-of [ "male" "female" ]
+    set sex first rnd:weighted-one-of-list ["female" 0.48 "male" 0.52] [ [p] -> last p ]
     set mother 0
     ifelse ( sex = "female" )
       [ set color pink ]
@@ -84,13 +84,14 @@ end
 
 to go
   print-date
-  if time:get "year" date = 2024 [ stop ]
+  if time:get "year" date = 3000 [ stop ]
   if time:get "month" date = 1 and time:get "day" date = 1 [
     issue-hunting-permits
     set first-day date
   ]
   regrow-food
   if not any? bears [ stop ]
+  cubs-die
   ask bears [
     if mother = 0 [
       check-kcal
@@ -147,8 +148,9 @@ end
 
 ;; Bears die at 30
 to check-age
-  if age = 365 * 30 [ die ]
+  if age >= 365 * 30 [ die ]
   if age >= 365 * 2.45 [set mother 0]
+  set age age + 1
 end
 
 ;; Reduce the agitation based on the calm-down-period
@@ -182,6 +184,13 @@ to birth-cubs
       set pregnancy-duration pregnancy-duration + 1
     ]
 
+  ]
+end
+
+;; Not all cubs live to adulthood
+to cubs-die
+  ask bears with [((age < 365 * 2.45) and (age mod 365 = 0)) or (age = 1)] [
+    if random 100 > 74 [ die ] ;; annual cub survival probability of 0.74
   ]
 end
 
@@ -447,10 +456,10 @@ NIL
 HORIZONTAL
 
 PLOT
-776
-93
-976
-243
+753
+10
+953
+160
 Bear population over time
 Ticks
 Bear Count
@@ -472,10 +481,10 @@ OUTPUT
 11
 
 MONITOR
-768
-257
-984
-302
+752
+171
+957
+216
 Number of pregnant bears
 count bears with [pregnant = 1]
 17
@@ -498,10 +507,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-1044
-148
-1192
-193
+980
+63
+1128
+108
 Liberally hunted bears
 liberally-hunted-bears
 17
@@ -509,10 +518,10 @@ liberally-hunted-bears
 11
 
 PLOT
-839
-345
-1001
-482
+753
+236
+956
+380
 food over time
 ticks
 food count
@@ -542,10 +551,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1007
-345
-1177
-482
+978
+236
+1175
+381
 avg traveled distance per day
 days
 km
@@ -560,10 +569,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [traveled-today] of bears / 7.3"
 
 MONITOR
-1024
-96
-1213
-141
+980
+10
+1169
+55
 Number of aggressive bears
 count bears with [agitation > 5]
 17
@@ -592,10 +601,10 @@ hunt-aggressive-bears
 -1000
 
 MONITOR
-1044
-202
-1195
-247
+980
+116
+1131
+161
 Hunted aggressive bears
 hunted-aggressive-bears
 17
@@ -603,12 +612,52 @@ hunted-aggressive-bears
 11
 
 MONITOR
-1073
-257
-1163
-302
+979
+170
+1069
+215
 NIL
 count hunters
+17
+1
+11
+
+PLOT
+752
+389
+956
+539
+age distribution
+age
+count
+1.0
+10950.0
+0.0
+25.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "histogram [age] of bears"
+
+MONITOR
+1013
+404
+1070
+449
+n fem
+count bears with [sex = \"female\"]
+17
+1
+11
+
+MONITOR
+1100
+403
+1157
+448
+n male
+count bears with [sex = \"male\"]
 17
 1
 11
