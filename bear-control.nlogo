@@ -55,7 +55,7 @@ to setup
     set shape "bear"
     set kcal 20000 + random 10000
     set age random 30 * 365
-    set sex first rnd:weighted-one-of-list ["female" 0.48 "male" 0.52] [ [p] -> last p ]
+    set sex first rnd:weighted-one-of-list [ ["female" 0.48] ["male" 0.52] ] [ [p] -> last p ]
     set mother 0
     ifelse ( sex = "female" )
       [ set color pink ]
