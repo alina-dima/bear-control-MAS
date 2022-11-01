@@ -298,7 +298,7 @@ to hunt-aggressive
       ask one-of bears-here with [ agitation > 5 ]  [ die ]
       set hunted-aggressive-bears hunted-aggressive-bears + 1
     ] [
-      ask one-of bears-here with [ agitation > 5 ]  [ set agitation 0 ]
+      ask one-of bears-here with [ agitation > 5 ]  [ set agitation 4 ]
     ]
     set hunted 1
   ]
