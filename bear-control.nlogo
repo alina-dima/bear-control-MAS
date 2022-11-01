@@ -33,6 +33,7 @@ globals [
   season               ; If it is mating season or not
   sexual-maturity-age  ; Age at which a bear can mate
   liberally-hunted-bears
+  issued-aggressive-permits
   hunted-aggressive-bears
   calm-down-period
   starved-bears
@@ -47,6 +48,7 @@ to setup
   set date first-day
   set sexual-maturity-age ( 5.5 * 365 )
   set liberally-hunted-bears 0
+  set issued-aggressive-permits 0
   set hunted-aggressive-bears 0
 
   create-bears number-of-bears [
@@ -280,6 +282,7 @@ end
 ;; If any bears have an agitation level of above 5, then a hunter is created and the aggressive
 ;; bear is hunted.
 to hunt-aggressive
+  set issued-aggressive-permits issued-aggressive-permits + count bears with [ agitation > 5 ]
   create-hunters count bears with [ agitation > 5 ] [
     set size 30
     set color red
@@ -290,8 +293,13 @@ to hunt-aggressive
   ask hunters with [ hunts-aggressive = true ] [
     show-turtle
     move-to one-of bears with [ agitation > 5 ]
-    ask one-of bears-here with [ agitation > 5 ]  [ die ]
-    set hunted-aggressive-bears hunted-aggressive-bears + 1
+    ;; Succesfully hunt an aggressive bear with 80% probability.
+    ifelse random 100 < 80 [
+      ask one-of bears-here with [ agitation > 5 ]  [ die ]
+      set hunted-aggressive-bears hunted-aggressive-bears + 1
+    ] [
+      ask one-of bears-here with [ agitation > 5 ]  [ set agitation 0 ]
+    ]
     set hunted 1
   ]
 end
@@ -457,9 +465,9 @@ HORIZONTAL
 
 PLOT
 753
-10
+66
 953
-160
+216
 Bear population over time
 Ticks
 Bear Count
@@ -482,9 +490,9 @@ OUTPUT
 
 MONITOR
 752
-171
+227
 957
-216
+272
 Number of pregnant bears
 count bears with [pregnant = 1]
 17
@@ -507,10 +515,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-980
-63
-1128
-108
+1001
+65
+1149
+110
 Liberally hunted bears
 liberally-hunted-bears
 17
@@ -518,13 +526,13 @@ liberally-hunted-bears
 11
 
 PLOT
-753
-236
-956
-380
-food over time
-ticks
-food count
+984
+392
+1187
+536
+Food over time
+Days
+Food count
 0.0
 10.0
 0.0
@@ -551,11 +559,11 @@ NIL
 HORIZONTAL
 
 PLOT
-978
-236
-1175
-381
-avg traveled distance per day
+984
+233
+1181
+378
+Avg traveled distance per day
 days
 km
 0.0
@@ -596,15 +604,15 @@ SWITCH
 354
 hunt-aggressive-bears
 hunt-aggressive-bears
-1
+0
 1
 -1000
 
 MONITOR
-980
-116
-1131
-161
+1001
+118
+1152
+163
 Hunted aggressive bears
 hunted-aggressive-bears
 17
@@ -612,24 +620,24 @@ hunted-aggressive-bears
 11
 
 MONITOR
-979
-170
-1069
-215
-NIL
-count hunters
+1000
+172
+1156
+217
+Total aggr. permits issued
+issued-aggressive-permits
 17
 1
 11
 
 PLOT
-752
-389
-956
-539
-age distribution
-age
-count
+753
+339
+957
+489
+Age distribution
+Age
+Count
 1.0
 10950.0
 0.0
@@ -641,22 +649,22 @@ PENS
 "default" 1.0 0 -16777216 true "" "histogram [age] of bears"
 
 MONITOR
-1013
-404
-1070
-449
-n fem
+782
+282
+839
+327
+Num. F
 count bears with [sex = \"female\"]
 17
 1
 11
 
 MONITOR
-1100
-403
-1157
-448
-n male
+869
+281
+926
+326
+Num. M
 count bears with [sex = \"male\"]
 17
 1
