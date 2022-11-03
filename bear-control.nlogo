@@ -250,8 +250,8 @@ to hunt
       ifelse any? bears with [ age > 2 * 365 ] [
         ask one-of hunters with [ hunt-day = day-of-year ] [
           show-turtle
-          move-to one-of bears with [ age > 2 * 365 ]
-          ask one-of bears-here with [ age > 2 * 365 ]  [ die ]
+          move-to one-of bears with [ age > 2 * 365 and not any? bears with [ mother = myself ] ]
+          ask one-of bears-here with [ age > 2 * 365 and not any? bears with [ mother = myself ] ]  [ die ]
           set liberally-hunted-bears liberally-hunted-bears + 1
           set hunted 1
         ]
